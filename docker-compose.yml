@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  ultralytics-cpu:
+    image: ultralytics/ultralytics:latest-cpu
+    ipc: host
+    tty: true
+    stdin_open: true
