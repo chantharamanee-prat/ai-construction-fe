@@ -5,3 +5,9 @@ services:
     ipc: host
     tty: true
     stdin_open: true
+    networks:
+      - yolo-network
+
+networks:
+  yolo-network:
+    driver: bridge
