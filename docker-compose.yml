@@ -11,3 +11,6 @@ services:
 networks:
   yolo-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
