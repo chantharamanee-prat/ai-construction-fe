@@ -22,6 +22,7 @@ This guide explains how to annotate images using the provided annotation tool (`
      - 2: beam
      - 3: roof
      - 4: wall
+     - 5: floor
    - The bounding box will be displayed on the image.
    - Use the following keyboard controls:
      - `n`: Save annotations and move to the next image
