@@ -29,3 +29,5 @@ datasets/test/
 datasets/train/
 datasets/val/
 __pycache__/
+
+runs/

@@ -25,3 +25,26 @@
 ## Dependencies
 ### requirements.txt
 ultralytics==8.3.174
+
+## Evaluation Implementation (Current)
+- Detection evaluation:
+  - API: `from ultralytics import YOLO` then `YOLO(weights).val(data=data_yaml, imgsz, batch, device, split)`
+  - Metrics extracted with compatibility for Ultralytics 8.3.174 (`results.box.map`, `results.box.map50`, `results.box.mp`, `results.box.mr`), with fallbacks.
+- Progress regression evaluation:
+  - Simplified CNN architecture mirroring `train.py:create_simple_model` (Conv2d → ReLU → MaxPool x2 → Conv2d → GAP → FC → Sigmoid) producing normalized progress in [0,1].
+  - Weights loaded from `models/construction_progress.pt` (configurable via `--progress-weights`).
+  - Ground-truth read from YOLO label comment `# progress:` in either percent (e.g., `10%`) or fractional (`0.1`) form.
+
+## Script Interfaces
+- `evaluate.py` CLI:
+  - `--weights`, `--data`, `--imgsz`, `--batch`, `--device`, `--split {val,test}`, `--progress-weights`, `--save-dir`, `--save-figs`
+- Outputs:
+  - `reports/evaluation_metrics.csv`
+  - `reports/figures/*.png` (optional with `--save-figs`)
+- Documentation:
+  - `docs/EVALUATION_GUIDE.md` documents usage, requirements, outputs, and troubleshooting.
+
+## Notes
+- Progress metrics are reported in [0,1]. Multiply by 100 for percentage interpretation.
+- If regression weights are missing or incompatible, progress evaluation is skipped with a warning.
+- `data.yaml` must define the requested split (`val` or `test`) for detection evaluation to run normally.

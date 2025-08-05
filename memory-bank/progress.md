@@ -1,33 +1,33 @@
 # Progress
 
-## What works
-- Environment setup
-- Dataset collection and organization with progress-labeled subfolders
-- Directory structure preparation for progress-aware dataset
-- Annotation tool setup with progress metadata saving
-- Training script configuration extended for progress regression
-- Dataset splitting script updated to preserve progress percentage distribution
-- ✅ Fixed training script errors (BaseTrainer parameter issues, image size batching, variable-length bounding boxes)
-- ✅ Successfully completed model training for 100 epochs
-- ✅ Trained progress prediction model saved to models/construction_progress.pt
+## What Works
+- `evaluate.py` successfully evaluates:
+  - Detection metrics via Ultralytics YOLOv8 `model.val()` using `data.yaml`.
+  - Progress regression metrics (MAE, RMSE in [0,1]) using the simplified model trained by `train.py` when weights are available.
+- Outputs:
+  - `reports/evaluation_metrics.csv` (Split, mAP50-95, mAP50, Precision, Recall, Progress_MAE(0-1), Progress_RMSE(0-1))
+  - `reports/figures/*.png` when `--save-figs` is used (up to 5 samples).
+- CLI arguments provide flexibility for weights, data paths, device, and split control.
 
-## What's left to build
-- Complete image annotations with progress metadata
-- Split dataset into train/val/test sets using updated split_dataset.py
-- Model training and validation with multi-task learning
-- Performance evaluation including progress prediction accuracy
-- Reporting system
+## Recent Changes
+- `evaluate.py` refactor implemented:
+  - Proper Ultralytics v8 API usage for detection evaluation with fallback metric extraction.
+  - Regression model loader mirrors `train.py:create_simple_model`.
+  - Robust label parsing for `# progress:` with both percent and fractional formats.
+  - Added logging and directory creation for reports.
+- Documentation added: `docs/EVALUATION_GUIDE.md`.
 
-## Current status
-Dataset preparation and initial training phase with progress tracking
+## What's Left / Next Steps
+- Optional: Add confusion matrix and PR/ROC curves exports and include in `reports/figures`.
+- Optional: Save per-class AP to CSV/JSON for deeper analysis.
+- Optional: Add regression scatter plot (GT vs Pred) and error histograms.
+- Optional: Config-driven defaults (pull from `configs/training.yaml` and `configs/dataset.yaml`) to minimize CLI args.
+- Optional: Add unit tests for label parsing and regression evaluation paths.
 
-## Known issues
-- Annotation tool requires manual labeling of all images with progress metadata
-- Need to verify class and progress label distribution across splits
+## Known Issues
+- If `models/construction_progress.pt` is missing or incompatible, progress metrics are skipped (warning logged).
+- `data.yaml` must correctly define the `val`/`test` split used; otherwise detection metrics default to zeros with an error log.
+- Progress errors are normalized; convert to percentage by multiplying by 100 for presentation.
 
-## Evolution of decisions
-- Started with YOLO/Ultralytics after evaluating alternatives
-- Restructured dataset to include progress-labeled subfolders
-- Extended annotation format to include progress metadata
-- Updated training pipeline for multi-task learning (detection + regression)
-- Updated dataset splitting logic to preserve progress distribution
+## Current Status
+- Evaluation pipeline is functional and documented. Ready for PoC evaluation runs on `val` or `test` splits.

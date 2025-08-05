@@ -2,5 +2,5 @@ train: datasets/train/images
 val: datasets/val/images
 test: datasets/test/images
 
-nc: 5
-names: ['foundation', 'column', 'beam', 'roof', 'wall']
+nc: 6
+names: ['foundation', 'column', 'beam', 'roof', 'wall', "floor"]

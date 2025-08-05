@@ -1,0 +1,2 @@
+Split,mAP50-95,mAP50,Precision,Recall,Progress_MAE(0-1),Progress_RMSE(0-1)
+test,0.000000,0.000000,0.000000,0.000000,21.647070,24.521320

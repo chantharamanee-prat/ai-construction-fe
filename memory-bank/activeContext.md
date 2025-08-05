@@ -1,50 +1,45 @@
-# activeContext.md
+# Active Context
 
-## Current Work
-The project has been updated to support construction progress percentage tracking and prediction using a YOLO-based model. Key updates include:
+## Current Focus
+- Implemented robust evaluation pipeline for detection (YOLOv8) and progress regression (custom simplified model) in `evaluate.py`.
+- Standardized outputs: CSV summary and optional figures for qualitative inspection.
 
-- Dataset images are now organized in progress-labeled subfolders under `datasets/construction_raw_images/` (e.g., `10%/`, `15%/`, `20%/`, etc.).
-- The dataset splitting script (`split_dataset.py`) reads images from these progress subfolders to create train/val/test splits.
-- The annotation tool (`annotate.py`) has been enhanced to save progress metadata as comment lines in annotation files alongside bounding box labels.
-- A custom dataset loader (`custom_dataset.py`) was created to load images, bounding boxes, and progress labels for multi-task training.
-- The training script (`train.py`) was extended to add a regression head to the YOLO model for progress prediction and implements a custom training loop for joint detection and regression.
-- The dataset configuration (`configs/dataset.yaml`) was updated to point to the new image directory structure.
-- The dataset splitting logic in `split_dataset.py` was updated to preserve the progress percentage distributions by processing each progress group separately. The script shuffles, splits according to configured ratios, and copies images and labels into the appropriate output folders.
+## Recent Changes
+- Refactored `evaluate.py` to:
+  - Use Ultralytics YOLOv8 `model.val()` for detection metrics against `data.yaml`.
+  - Load and evaluate the simplified regression model trained in `train.py` (architecture mirrored) from `models/construction_progress.pt`.
+  - Read ground-truth progress from YOLO label files using comment line format: `# progress: 10%` or `# progress: 0.1` (normalized to [0,1]).
+  - CLI args for flexibility: `--weights`, `--data`, `--imgsz`, `--batch`, `--device`, `--split`, `--progress-weights`, `--save-dir`, `--save-figs`.
+  - Save metrics to `reports/evaluation_metrics.csv`; optional visualizations to `reports/figures`.
 
-## Key Technical Concepts
-- YOLO object detection model training using Ultralytics YOLOv8
-- Dataset preparation in YOLO format (images + .txt annotations) with progress metadata
-- Multi-task learning: object detection + progress regression
-- Dataset YAML configuration for training, validation, and test splits
-- GPU-accelerated training with batch size and image size configuration
-- Annotation tool development using OpenCV for bounding box labeling and progress metadata
-- Custom PyTorch dataset loader for progress-aware training
-- Dataset splitting preserving progress percentage distribution
+## How Evaluation Works Now
+- Detection:
+  - Command: `python evaluate.py --weights yolov8n.pt --data data.yaml --split val`
+  - Metrics extracted from `YOLO(...).val(...)` compatible with Ultralytics 8.3.174:
+    - mAP50-95 (`box.map`), mAP50 (`box.map50`), Precision (`box.mp`), Recall (`box.mr`) with fallbacks if structure changes.
+- Progress Regression:
+  - Loads `models/construction_progress.pt` if present.
+  - Evaluates MAE and RMSE in [0,1] range over `datasets/{split}/images` + corresponding labels in `datasets/{split}/labels`.
+  - Optional figures (first 5) saved if `--save-figs` is passed.
 
-## Relevant Files and Code
-- annotate.py: Annotation tool for labeling images with bounding boxes, class IDs, and progress metadata
-- split_dataset.py: Dataset splitting script updated to handle progress-labeled subfolders and preserve distribution
-- custom_dataset.py: Custom dataset loader for loading images, bounding boxes, and progress labels
-- train.py: Training script extended for multi-task learning with progress regression
-- configs/dataset.yaml: Dataset configuration updated for new directory structure
+## Outputs
+- `reports/evaluation_metrics.csv`
+  - Columns: Split, mAP50-95, mAP50, Precision, Recall, Progress_MAE(0-1), Progress_RMSE(0-1)
+- `reports/figures/*.png` (if `--save-figs`)
 
-## Problem Solving
-- Addressed lack of progress metadata in raw images by integrating progress labels in annotation files
-- Designed and implemented progress metadata integration in annotation and dataset loading
-- Extended model and training pipeline for progress prediction
-- Refactored dataset splitting to group images by progress percentage and split each group separately to preserve distribution
-- Ensured reproducibility with a random seed and maintained output directory structure and label copying
+## Next Steps
+- Optional: add confusion matrix, PR/ROC curves via Ultralytics settings and export key plots to `reports/figures`.
+- Optional: aggregate per-class AP and log to an extended CSV/JSON.
+- Optional: add regression scatter plots (GT vs Pred) and error histograms.
+- Optional: parameterize the number of saved visualization samples.
 
-## Pending Tasks and Next Steps
-- ✅ Fixed training script errors and successfully completed model training
-- Model training completed for 100 epochs with simplified progress prediction model
-- Trained model saved to `models/construction_progress.pt`
-- Next steps: Evaluate model performance and implement full YOLO+progress regression if needed
-- Consider implementing validation loop and model evaluation metrics
-- Test the trained model on validation/test data
-- Update memory bank files to document current progress and recent changes.
+## Important Patterns & Preferences
+- Use `logging` for progress and errors.
+- Use `pathlib.Path`.
+- Keep evaluation CLI consistent with training configs (`configs/training.yaml`, `configs/dataset.yaml`).
+- Normalize progress in [0,1]; label format must include the `# progress:` comment line.
 
-## Notes
-- Annotation tool saves progress percentage as comment lines in annotation files.
-- Tool supports deleting last bounding box, moving to next image, and quitting.
-- Annotation files are saved in `datasets/labels/` with the same base name as images.
+## Known Issues / Considerations
+- If `models/construction_progress.pt` does not exist or incompatible, progress evaluation is skipped with a warning.
+- Requires `data.yaml` to define `val` and `test` if those splits are used for detection evaluation.
+- Label files must contain a `# progress:` line for samples to count towards progress metrics.
