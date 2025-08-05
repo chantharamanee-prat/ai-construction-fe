@@ -9,7 +9,7 @@
 
 ## What's left to build
 - Complete image annotations (134 images)
-- Split dataset into train/val/test sets
+- Split dataset into train/val/test sets (implemented split_dataset.py)
 - Model training and validation
 - Performance evaluation
 - Reporting system

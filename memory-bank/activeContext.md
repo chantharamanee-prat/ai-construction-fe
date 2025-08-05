@@ -41,7 +41,7 @@ The annotation tool (annotate.py) is ready for labeling images with five classes
 
 ## Pending Tasks and Next Steps
 - Annotate all images using annotate.py
-- Split annotated dataset into train/val/test sets
+- Split annotated dataset into train/val/test sets using split_dataset.py
 - Verify annotation quality
 - Execute training by running train.py with updated model path in `models/` directory
 
