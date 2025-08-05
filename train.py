@@ -1,26 +1,35 @@
+import logging
+import yaml
 from ultralytics import YOLO
 import torch
 
-def main():
-    print(f"CUDA available: {torch.cuda.is_available()}")
+def main(config_path: str = "configs/training.yaml") -> None:
+    """
+    Train YOLO model based on configuration.
 
-    # Load pretrained YOLOv8n model
-    model = YOLO("models/yolov8n.pt")
+    Args:
+        config_path (str): Path to YAML configuration file.
+    """
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    # Train the model
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    logging.info(f"CUDA available: {torch.cuda.is_available()}")
+
+    model = YOLO(config['model_path'])
+
     results = model.train(
-        data="data.yaml",
-        epochs=100,
-        imgsz=640,
-        batch=16,
-        device=0  # Use GPU device 0
+        data=config['data'],
+        epochs=config['epochs'],
+        imgsz=config['imgsz'],
+        batch=config['batch'],
+        device=config['device']
     )
 
-    # Export the best model to ONNX format
-    model.export(format="onnx")
-
-    # Save the trained model weights
-    model.save("models/construction_progress.pt")
+    model.export(format=config['export_format'])
+    model.save(config['save_path'])
+    logging.info(f"Model trained and saved to {config['save_path']}")
 
 if __name__ == "__main__":
     main()

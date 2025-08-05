@@ -1,22 +1,56 @@
+
 import cv2
-import os
-import json
+import pathlib
+import logging
+import yaml
+from typing import List, Tuple
 
 class Annotator:
-    def __init__(self, image_dir, output_dir, classes):
-        self.image_dir = image_dir
-        self.output_dir = output_dir
-        self.classes = classes
-        self.images = [f for f in os.listdir(image_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    """
+    Annotation tool for labeling images with bounding boxes and class IDs.
+
+    Attributes:
+        image_dir (pathlib.Path): Directory containing images to annotate.
+        output_dir (pathlib.Path): Directory to save annotation files.
+        classes (List[str]): List of class names.
+        images (List[pathlib.Path]): List of image file paths.
+        index (int): Current image index.
+        current_image (cv2.Mat): Current image being annotated.
+        bboxes (List[Tuple[int, float, float, float, float]]): List of bounding boxes.
+        drawing (bool): Flag indicating if drawing is in progress.
+        ix (int): Initial x-coordinate of bounding box.
+        iy (int): Initial y-coordinate of bounding box.
+        window_name (str): Name of the OpenCV window.
+    """
+
+    def __init__(self, config_path: str):
+        """
+        Initialize the Annotator with configuration from a YAML file.
+
+        Args:
+            config_path (str): Path to the YAML configuration file.
+        """
+        self.load_config(config_path)
+        self.images = [p for p in self.image_dir.iterdir() if p.suffix.lower() in {'.jpg', '.jpeg', '.png'}]
         self.index = 0
         self.current_image = None
-        self.bboxes = []  # list of (class_id, x_center, y_center, width, height) normalized
+        self.bboxes = []
         self.drawing = False
         self.ix, self.iy = -1, -1
         self.window_name = "Annotator"
-        os.makedirs(output_dir, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    def draw_bbox(self, img, bbox, color=(0, 255, 0)):
+    def load_config(self, config_path: str) -> None:
+        """Load configuration from YAML file."""
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        self.image_dir = pathlib.Path(config['image_dir'])
+        self.output_dir = pathlib.Path(config['output_dir'])
+        self.classes = config['classes']
+
+    def draw_bbox(self, img: cv2.Mat, bbox: Tuple[int, float, float, float, float], color: Tuple[int, int, int]=(0, 255, 0)) -> None:
+        """Draw a bounding box on the image."""
         h, w = img.shape[:2]
         class_id, x_c, y_c, bw, bh = bbox
         x1 = int((x_c - bw / 2) * w)
@@ -27,10 +61,12 @@ class Annotator:
         label = self.classes[class_id]
         cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
-    def mouse_callback(self, event, x, y, flags, param):
+    def mouse_callback(self, event: int, x: int, y: int, flags: int, param) -> None:
+        """Handle mouse events for drawing bounding boxes."""
         if event == cv2.EVENT_LBUTTONDOWN:
             self.drawing = True
             self.ix, self.iy = x, y
+            logging.debug(f"Started drawing at ({x}, {y})")
         elif event == cv2.EVENT_MOUSEMOVE:
             if self.drawing:
                 self.current_image_copy = self.current_image.copy()
@@ -49,6 +85,7 @@ class Annotator:
             y_c = ((y1 + y2) / 2) / h
             bw = (x2 - x1) / w
             bh = (y2 - y1) / h
+            logging.debug(f"Finished drawing bbox: class_id pending selection, coords: ({x_c}, {y_c}, {bw}, {bh})")
             print("Select class for bounding box:")
             for i, cls in enumerate(self.classes):
                 print(f"{i}: {cls}")
@@ -62,27 +99,34 @@ class Annotator:
             self.bboxes.append((class_id, x_c, y_c, bw, bh))
             self.draw_bbox(self.current_image, self.bboxes[-1])
             cv2.imshow(self.window_name, self.current_image)
+            logging.debug(f"Added bbox with class_id {class_id}")
 
-    def save_annotations(self):
-        base_name = os.path.splitext(self.images[self.index])[0]
-        label_path = os.path.join(self.output_dir, base_name + ".txt")
-        with open(label_path, "w") as f:
-            for bbox in self.bboxes:
-                f.write(" ".join(map(str, bbox)) + "\n")
+    def save_annotations(self) -> None:
+        """Save annotations to a text file in YOLO format."""
+        base_name = self.images[self.index].stem
+        label_path = self.output_dir / f"{base_name}.txt"
+        try:
+            with open(label_path, "w") as f:
+                for bbox in self.bboxes:
+                    f.write(" ".join(map(str, bbox)) + "\n")
+            logging.info(f"Saved annotations to {label_path}")
+        except Exception as e:
+            logging.error(f"Failed to save annotations: {e}")
 
-    def run(self):
+    def run(self) -> None:
+        """Run the annotation tool."""
         while self.index < len(self.images):
-            img_path = os.path.join(self.image_dir, self.images[self.index])
-            self.current_image = cv2.imread(img_path)
+            img_path = self.images[self.index]
+            self.current_image = cv2.imread(str(img_path))
             if self.current_image is None:
-                print(f"Failed to load {img_path}")
+                logging.error(f"Failed to load {img_path}")
                 self.index += 1
                 continue
             self.bboxes = []
             self.current_image_copy = self.current_image.copy()
             cv2.namedWindow(self.window_name)
             cv2.setMouseCallback(self.window_name, self.mouse_callback)
-            print(f"Annotating image {self.index + 1}/{len(self.images)}: {self.images[self.index]}")
+            logging.info(f"Annotating image {self.index + 1}/{len(self.images)}: {img_path.name}")
             cv2.imshow(self.window_name, self.current_image)
             while True:
                 key = cv2.waitKey(1) & 0xFF
@@ -97,15 +141,12 @@ class Annotator:
                 elif key == ord('d'):  # Delete last bbox
                     if self.bboxes:
                         self.bboxes.pop()
-                        self.current_image = cv2.imread(img_path)
+                        self.current_image = cv2.imread(str(img_path))
                         for bbox in self.bboxes:
                             self.draw_bbox(self.current_image, bbox)
                         cv2.imshow(self.window_name, self.current_image)
             cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    classes = ['foundation', 'column', 'beam', 'roof', 'wall']
-    image_dir = "datasets/raw_images"
-    output_dir = "datasets/labels"
-    annotator = Annotator(image_dir, output_dir, classes)
+    annotator = Annotator("configs/annotation.yaml")
     annotator.run()

@@ -1,0 +1,9 @@
+# Configuration for annotation tool
+image_dir: datasets/raw_images
+output_dir: datasets/labels
+classes:
+  - foundation
+  - column
+  - beam
+  - roof
+  - wall

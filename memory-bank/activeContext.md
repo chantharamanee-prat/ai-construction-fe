@@ -50,3 +50,10 @@ The annotation tool (annotate.py) is ready for labeling images with five classes
 - Annotation tool expects images in `datasets/raw_images`
 - Labels will be saved to `datasets/labels/`
 - Model files are now stored and loaded from the `models/` directory, including pretrained and trained weights
+
+## Recent Refactoring
+- Refactored annotation tool to use YAML configuration, pathlib, logging, and type hints
+- Refactored dataset splitting script to use YAML config, pathlib, logging, and input validation
+- Refactored training script to externalize parameters, add logging, and use YAML config
+- Updated project to follow PEP8, Google-style docstrings, and DEBUG logging level
+- Added configuration files for annotation, dataset splitting, and training
