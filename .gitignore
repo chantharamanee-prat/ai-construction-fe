@@ -18,3 +18,9 @@ logs/
 
 # System files
 .DS_Store
+
+
+venv/
+.vscode/
+models/*
+!models/.gitkeep
