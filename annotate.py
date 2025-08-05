@@ -32,9 +32,12 @@ class Annotator:
         """
         self.load_config(config_path)
         # Recursively gather all image files in subdirectories
-        self.images = list(self.image_dir.rglob('*'))
-        self.images = [p for p in self.images if p.suffix.lower() in {'.jpg', '.jpeg', '.png'}]
-        # Initialize image progress dictionary by extracting progress from parent directory name
+        # Gather all images recursively
+        self.images = []
+        for ext in ['.jpg', '.jpeg', '.png']:
+            self.images.extend(self.image_dir.rglob(f'*{ext}'))
+        
+        # Initialize image progress dictionary and sort by progress
         self.image_progress = {}
         for img_path in self.images:
             dir_name = img_path.parent.name
@@ -43,7 +46,17 @@ class Annotator:
             except ValueError:
                 progress = 0.0
             self.image_progress[img_path] = progress
+        
+        # Sort images by progress percentage (ascending)
+        self.images.sort(key=lambda p: self.image_progress[p])
+        
+        # Find last annotated image to resume from
         self.index = 0
+        for i, img_path in enumerate(self.images):
+            label_path = self.output_dir / f"{img_path.stem}.txt"
+            if not label_path.exists():
+                self.index = i
+                break
         self.current_image = None
         self.bboxes = []
         self.drawing = False
@@ -137,6 +150,15 @@ class Annotator:
                 logging.error(f"Failed to load {img_path}")
                 self.index += 1
                 continue
+            
+            # Check if annotation exists and skip if resuming
+            base_name = img_path.stem
+            label_path = self.output_dir / f"{base_name}.txt"
+            if label_path.exists():
+                logging.info(f"Skipping already annotated image: {img_path.name}")
+                self.index += 1
+                continue
+                
             self.bboxes = []
             self.current_image_copy = self.current_image.copy()
             cv2.namedWindow(self.window_name)
