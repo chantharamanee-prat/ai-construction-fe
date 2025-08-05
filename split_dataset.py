@@ -3,11 +3,11 @@ import random
 import shutil
 import logging
 import yaml
-from typing import List
 
 def split_dataset(config_path: str) -> None:
     """
-    Split dataset into train, val, and test sets based on configuration.
+    Split dataset into train, val, and test sets based on configuration,
+    preserving progress percentage distributions.
 
     Args:
         config_path (str): Path to YAML configuration file.
@@ -33,8 +33,8 @@ def split_dataset(config_path: str) -> None:
 
     random.seed(seed)
 
-    # Collect images with progress percentage from subfolder names
-    images_with_progress = []
+    # Collect images grouped by progress percentage from subfolder names
+    progress_groups = {}
     for progress_dir in images_root_dir.iterdir():
         if progress_dir.is_dir():
             try:
@@ -42,31 +42,37 @@ def split_dataset(config_path: str) -> None:
             except ValueError:
                 logging.warning(f"Skipping folder with invalid progress name: {progress_dir.name}")
                 continue
+            group_images = []
             for img_path in progress_dir.iterdir():
                 if img_path.suffix.lower() in {'.jpg', '.jpeg', '.png'}:
-                    images_with_progress.append((img_path, progress_percent))
+                    group_images.append(img_path)
+            if group_images:
+                progress_groups[progress_percent] = group_images
 
-    if not images_with_progress:
+    if not progress_groups:
         logging.error(f"No images found in {images_root_dir} with progress subfolders")
         return
 
-    random.shuffle(images_with_progress)
+    splits = {"train": [], "val": [], "test": []}
 
-    total = len(images_with_progress)
-    train_count = int(total * train_ratio)
-    val_count = int(total * val_ratio)
-    test_count = total - train_count - val_count
+    # Split each progress group separately and combine
+    for progress, images in progress_groups.items():
+        random.shuffle(images)
+        total = len(images)
+        train_count = int(total * train_ratio)
+        val_count = int(total * val_ratio)
+        test_count = total - train_count - val_count
 
-    splits = {
-        "train": images_with_progress[:train_count],
-        "val": images_with_progress[train_count:train_count + val_count],
-        "test": images_with_progress[train_count + val_count:]
-    }
+        splits["train"].extend([(img, progress) for img in images[:train_count]])
+        splits["val"].extend([(img, progress) for img in images[train_count:train_count + val_count]])
+        splits["test"].extend([(img, progress) for img in images[train_count + val_count:]])
 
+    # Create output directories
     for split in splits:
         (output_dir / split / "images").mkdir(parents=True, exist_ok=True)
         (output_dir / split / "labels").mkdir(parents=True, exist_ok=True)
 
+    # Copy images and labels to respective directories
     for split, files in splits.items():
         for img_path, progress in files:
             dst_img_path = output_dir / split / "images" / img_path.name

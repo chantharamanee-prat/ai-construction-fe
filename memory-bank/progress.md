@@ -6,6 +6,7 @@
 - Directory structure preparation for progress-aware dataset
 - Annotation tool setup with progress metadata saving
 - Training script configuration extended for progress regression
+- Dataset splitting script updated to preserve progress percentage distribution
 
 ## What's left to build
 - Complete image annotations with progress metadata
@@ -26,3 +27,4 @@ Dataset preparation and initial training phase with progress tracking
 - Restructured dataset to include progress-labeled subfolders
 - Extended annotation format to include progress metadata
 - Updated training pipeline for multi-task learning (detection + regression)
+- Updated dataset splitting logic to preserve progress distribution

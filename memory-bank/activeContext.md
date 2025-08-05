@@ -9,6 +9,7 @@ The project has been updated to support construction progress percentage trackin
 - A custom dataset loader (`custom_dataset.py`) was created to load images, bounding boxes, and progress labels for multi-task training.
 - The training script (`train.py`) was extended to add a regression head to the YOLO model for progress prediction and implements a custom training loop for joint detection and regression.
 - The dataset configuration (`configs/dataset.yaml`) was updated to point to the new image directory structure.
+- The dataset splitting logic in `split_dataset.py` was updated to preserve the progress percentage distributions by processing each progress group separately. The script shuffles, splits according to configured ratios, and copies images and labels into the appropriate output folders.
 
 ## Key Technical Concepts
 - YOLO object detection model training using Ultralytics YOLOv8
@@ -18,10 +19,11 @@ The project has been updated to support construction progress percentage trackin
 - GPU-accelerated training with batch size and image size configuration
 - Annotation tool development using OpenCV for bounding box labeling and progress metadata
 - Custom PyTorch dataset loader for progress-aware training
+- Dataset splitting preserving progress percentage distribution
 
 ## Relevant Files and Code
 - annotate.py: Annotation tool for labeling images with bounding boxes, class IDs, and progress metadata
-- split_dataset.py: Dataset splitting script updated to handle progress-labeled subfolders
+- split_dataset.py: Dataset splitting script updated to handle progress-labeled subfolders and preserve distribution
 - custom_dataset.py: Custom dataset loader for loading images, bounding boxes, and progress labels
 - train.py: Training script extended for multi-task learning with progress regression
 - configs/dataset.yaml: Dataset configuration updated for new directory structure
@@ -30,44 +32,18 @@ The project has been updated to support construction progress percentage trackin
 - Addressed lack of progress metadata in raw images by integrating progress labels in annotation files
 - Designed and implemented progress metadata integration in annotation and dataset loading
 - Extended model and training pipeline for progress prediction
+- Refactored dataset splitting to group images by progress percentage and split each group separately to preserve distribution
+- Ensured reproducibility with a random seed and maintained output directory structure and label copying
 
 ## Pending Tasks and Next Steps
-- Update memory bank documentation files to reflect new project conventions and technical changes
-- Document the new dataset structure, annotation format, and training pipeline enhancements
-- Ensure memory bank files like `activeContext.md`, `progress.md`, and `systemPatterns.md` capture these updates accurately
-## Key Technical Concepts
-- YOLO object detection model training using Ultralytics YOLOv8
-- Dataset preparation in YOLO format (images + .txt annotations)
-- Dataset YAML configuration for training, validation, and test splits
-- GPU-accelerated training with batch size and image size configuration
-- Annotation tool development using OpenCV for bounding box labeling
-
-## Relevant Files and Code
-- annotate.py: Annotation tool for labeling images with bounding boxes and class IDs
-- data.yaml: Dataset configuration file specifying dataset splits and class names
-- train.py: Training script to run YOLOv8n training with specified parameters
-
-## Problem Solving
-- Addressed directory structure mismatch (raw_image → raw_images)
-- Flattened nested image directory structure
-- Created proper train/val/test splits
-- Prepared annotation workflow
-
-## Pending Tasks and Next Steps
-- Annotate all images using annotate.py
-- Split annotated dataset into train/val/test sets using split_dataset.py
-- Verify annotation quality
-- Execute training by running train.py with updated model path in `models/` directory
+- Annotation tool (annotate.py) is currently in use for labeling all raw images with bounding boxes and progress metadata.
+- Annotation process is interactive and resumes from the last unannotated image.
+- After annotation completion, next steps are to split dataset into train/val/test sets using `split_dataset.py`.
+- Verify annotation quality and progress metadata consistency.
+- Proceed with model training and evaluation using `train.py`.
+- Update memory bank files to document current progress and recent changes.
 
 ## Notes
-- Dataset is now properly organized for YOLO training
-- Annotation tool expects images in `datasets/raw_images`
-- Labels will be saved to `datasets/labels/`
-- Model files are now stored and loaded from the `models/` directory, including pretrained and trained weights
-
-## Recent Refactoring
-- Refactored annotation tool to use YAML configuration, pathlib, logging, and type hints
-- Refactored dataset splitting script to use YAML config, pathlib, logging, and input validation
-- Refactored training script to externalize parameters, add logging, and use YAML config
-- Updated project to follow PEP8, Google-style docstrings, and DEBUG logging level
-- Added configuration files for annotation, dataset splitting, and training
+- Annotation tool saves progress percentage as comment lines in annotation files.
+- Tool supports deleting last bounding box, moving to next image, and quitting.
+- Annotation files are saved in `datasets/labels/` with the same base name as images.
