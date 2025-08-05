@@ -31,7 +31,18 @@ class Annotator:
             config_path (str): Path to the YAML configuration file.
         """
         self.load_config(config_path)
-        self.images = [p for p in self.image_dir.iterdir() if p.suffix.lower() in {'.jpg', '.jpeg', '.png'}]
+        # Recursively gather all image files in subdirectories
+        self.images = list(self.image_dir.rglob('*'))
+        self.images = [p for p in self.images if p.suffix.lower() in {'.jpg', '.jpeg', '.png'}]
+        # Initialize image progress dictionary by extracting progress from parent directory name
+        self.image_progress = {}
+        for img_path in self.images:
+            dir_name = img_path.parent.name
+            try:
+                progress = float(dir_name.rstrip('%'))
+            except ValueError:
+                progress = 0.0
+            self.image_progress[img_path] = progress
         self.index = 0
         self.current_image = None
         self.bboxes = []
@@ -107,6 +118,10 @@ class Annotator:
         label_path = self.output_dir / f"{base_name}.txt"
         try:
             with open(label_path, "w") as f:
+                # Write progress percentage as comment line
+                progress = self.image_progress.get(self.images[self.index], None)
+                if progress is not None:
+                    f.write(f"# progress: {progress}\n")
                 for bbox in self.bboxes:
                     f.write(" ".join(map(str, bbox)) + "\n")
             logging.info(f"Saved annotations to {label_path}")

@@ -2,26 +2,27 @@
 
 ## What works
 - Environment setup
-- Dataset collection and organization
-- Directory structure preparation
-- Annotation tool setup
-- Training script configuration
+- Dataset collection and organization with progress-labeled subfolders
+- Directory structure preparation for progress-aware dataset
+- Annotation tool setup with progress metadata saving
+- Training script configuration extended for progress regression
 
 ## What's left to build
-- Complete image annotations (134 images)
-- Split dataset into train/val/test sets (implemented split_dataset.py)
-- Model training and validation
-- Performance evaluation
+- Complete image annotations with progress metadata
+- Split dataset into train/val/test sets using updated split_dataset.py
+- Model training and validation with multi-task learning
+- Performance evaluation including progress prediction accuracy
 - Reporting system
 
 ## Current status
-Dataset preparation phase - ready for annotation
+Dataset preparation and initial training phase with progress tracking
 
 ## Known issues
-- Annotation tool requires manual labeling of all images
-- Need to verify class distribution across splits
+- Annotation tool requires manual labeling of all images with progress metadata
+- Need to verify class and progress label distribution across splits
 
 ## Evolution of decisions
 - Started with YOLO/Ultralytics after evaluating alternatives
-- Restructured dataset to match YOLO requirements
-- Flattened directory structure for easier processing
+- Restructured dataset to include progress-labeled subfolders
+- Extended annotation format to include progress metadata
+- Updated training pipeline for multi-task learning (detection + regression)

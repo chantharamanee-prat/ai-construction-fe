@@ -1,5 +1,5 @@
 # Configuration for annotation tool
-image_dir: datasets/raw_images
+image_dir: datasets/construction_raw_images
 output_dir: datasets/labels
 classes:
   - foundation

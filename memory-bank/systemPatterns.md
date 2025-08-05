@@ -7,6 +7,9 @@ Monolithic
 - Using YOLOv8 for object detection
 - Python-based implementation
 - Ultralytics framework
+- Extended YOLOv8 model with regression head for construction progress prediction
+- Custom dataset loader for multi-task learning (detection + progress regression)
+- Custom training loop integrating detection and regression losses
 
 ## Design patterns and best practices
 - Configuration management using external YAML files for annotation, dataset splitting, and training parameters
