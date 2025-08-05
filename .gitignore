@@ -24,3 +24,8 @@ venv/
 .vscode/
 models/*
 !models/.gitkeep
+
+datasets/test/
+datasets/train/
+datasets/val/
+__pycache__/
