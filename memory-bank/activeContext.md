@@ -8,6 +8,15 @@
 - Standardized outputs: CSV summary and optional figures for qualitative inspection.
 
 ## Recent Changes
+- Reorganized server-side code into dedicated `server/` directory with logical subdirectories:
+  - `api_handlers/` for business logic
+  - `configs/` for YAML configurations
+  - `datasets/` for data storage
+  - `dto/` for data transfer objects
+  - `docs/` for documentation
+  - `models/` for model weights
+  - `reports/` for evaluation outputs
+
 - Refactored `evaluate.py` to:
   - Use Ultralytics YOLOv8 `model.val()` for detection metrics against `data.yaml`.
   - Load and evaluate the simplified regression model trained in `train.py` (architecture mirrored) from `models/construction_progress.pt`.

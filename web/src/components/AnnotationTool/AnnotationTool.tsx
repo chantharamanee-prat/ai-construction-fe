@@ -1,20 +1,34 @@
 import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { fetchImages, saveAnnotation, type Annotation } from '../../api/annotationService';
 import ImageViewer from './ImageViewer';
 import DrawingCanvas from './DrawingCanvas';
 import ProgressForm from './ProgressForm';
 
 const AnnotationTool: React.FC = () => {
+  const { imagePath } = useParams();
+  const navigate = useNavigate();
   const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [annotation, setAnnotation] = useState<Annotation | null>(null);
+  const [dataset, setDataset] = useState<string>('');
 
   useEffect(() => {
     async function loadImages() {
       try {
         const imgs = await fetchImages();
         setImages(imgs);
-        if (imgs.length > 0) {
+        
+        // If imagePath is provided in URL, find its index
+        if (imagePath && imgs.includes(imagePath)) {
+          const index = imgs.indexOf(imagePath);
+          setCurrentImageIndex(index);
+          setAnnotation({
+            imageName: imagePath,
+            progress: 0,
+            boxes: [],
+          });
+        } else if (imgs.length > 0) {
           setCurrentImageIndex(0);
           setAnnotation({
             imageName: imgs[0],
@@ -29,7 +43,7 @@ const AnnotationTool: React.FC = () => {
       }
     }
     loadImages();
-  }, []);
+  }, [imagePath]);
 
   const handleBoxChange = (boxes: Annotation['boxes']) => {
     if (annotation) {
@@ -63,7 +77,12 @@ const AnnotationTool: React.FC = () => {
         progress: 0,
         boxes: [],
       });
+      navigate(`/annotate/${images[nextIndex]}`);
     }
+  };
+
+  const handleBackToList = () => {
+    navigate('/');
   };
 
   if (images.length === 0) {
@@ -72,8 +91,12 @@ const AnnotationTool: React.FC = () => {
 
   return (
     <div>
-      <h2>Annotation Tool</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h2>Annotation Tool</h2>
+        <button onClick={handleBackToList}>Back to Dataset List</button>
+      </div>
       <div>
+        <p>Current Dataset: {dataset || 'All'}</p>
         <ImageViewer imagePath={images[currentImageIndex]} />
         <DrawingCanvas boxes={annotation?.boxes || []} onChange={handleBoxChange} />
         <ProgressForm progress={annotation?.progress || 0} onChange={handleProgressChange} />

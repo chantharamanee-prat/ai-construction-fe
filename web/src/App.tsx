@@ -1,13 +1,16 @@
 import './App.css'
-import AnnotationTool from './components/AnnotationTool/AnnotationTool';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import DatasetListPage from './components/DatasetList/DatasetListPage'
+import AnnotationTool from './components/AnnotationTool/AnnotationTool'
 
 function App() {
-
   return (
-    <>
-      
-      <AnnotationTool />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<DatasetListPage />} />
+        <Route path="/annotate/:imagePath" element={<AnnotationTool />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

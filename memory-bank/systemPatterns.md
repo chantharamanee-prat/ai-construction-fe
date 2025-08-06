@@ -1,7 +1,14 @@
 # System Patterns
 
 ## System architecture
-Monolithic
+Monolithic with server-side code organized under `server/` directory:
+- API handlers in `server/api_handlers/`
+- Configuration files in `server/configs/`
+- Dataset processing in `server/datasets/`
+- Data transfer objects in `server/dto/`
+- Documentation in `server/docs/`
+- Models in `server/models/`
+- Reports in `server/reports/`
 
 ## Key technical decisions
 - Using YOLOv8 for object detection

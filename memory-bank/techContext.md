@@ -8,6 +8,16 @@
 - Virtual environment configured
 - Installation: `pip install -r requirements.txt`
 
+## Directory Structure
+Server-side code is organized under `server/`:
+- `api_handlers/`: API business logic handlers
+- `configs/`: YAML configuration files
+- `datasets/`: Raw and processed datasets
+- `dto/`: Data transfer objects
+- `docs/`: Documentation
+- `models/`: Model weights and definitions
+- `reports/`: Evaluation metrics and figures
+
 ## Technical constraints
 - Dataset limited to 50% completion
 - GPU requirements for training
@@ -32,14 +42,21 @@ python-multipart==0.0.6
 ## API Implementation
 - Framework: FastAPI
 - Endpoints:
-  - GET /api/images - Lists available images
+  - GET /api/images - Lists available images with annotation status and progress
+    - Returns: List[ImageDTO] where:
+      - path: str (image path)
+      - annotated: bool
+      - progress: float (0-1.0)
   - GET /api/images/{image_path} - Serves image file
-  - POST /api/annotations - Saves annotation data
+  - POST /api/annotations - Saves/updates annotation data including progress
 - Middleware: CORS configured to allow all origins
 - Data Flow:
   - API routes delegate to handler modules
   - Uses pathlib for filesystem operations
   - Models define request/response schemas
+- New DTOs:
+  - ImageDTO: For image listing responses
+  - Annotation: Updated with progress field
 
 ## Evaluation Implementation (Current)
 - Detection evaluation:
