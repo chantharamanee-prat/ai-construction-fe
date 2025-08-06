@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+
 from typing import List
 import os
 from pathlib import Path
-from .image_loader import list_images, get_image_path
-from .annotation_handler import save_annotation_to_file
+
+from handlers.image_loader import list_images, get_image_path
+from handlers.annotation_handler import save_annotation_to_file
+from models.annotation import Annotation
 
 app = FastAPI()
 
@@ -21,17 +23,6 @@ app.add_middleware(
 DATASET_DIR = Path("datasets/construction_raw_images")
 LABELS_DIR = Path("datasets/labels")
 
-class Box(BaseModel):
-    classId: int
-    xCenter: float
-    yCenter: float
-    width: float
-    height: float
-
-class Annotation(BaseModel):
-    imageName: str
-    progress: float  # 0-100
-    boxes: List[Box]
 
 @app.get("/api/images", response_model=List[str])
 async def get_images():

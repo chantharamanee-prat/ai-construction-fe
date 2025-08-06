@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
-from src.api import Annotation
+from models.annotation import Annotation 
+from .image_loader import list_images, get_image_path
 
 def save_annotation_to_file(labels_dir: Path, annotation: Annotation) -> None:
     """
