@@ -13,7 +13,19 @@ Monolithic
 - Separate but coordinated evaluation paths: Ultralytics detection validation + simplified regression evaluation
 
 ## Design patterns and best practices
-- Configuration management using external YAML files for annotation, dataset splitting, and training parameters
+### API Design
+- RESTful API design with FastAPI
+- Separation of concerns:
+  - Routes handle HTTP layer
+  - Handlers manage business logic
+  - Models define data schemas
+- Error handling:
+  - HTTPException for client errors
+  - 500 for server errors with details
+- Filesystem operations use pathlib for cross-platform compatibility
+
+### Configuration Management
+- External YAML files for annotation, dataset splitting, and training parameters
 - Error handling with logging for robust operation and debugging
 - Logging standards set to DEBUG/INFO level for detailed traceability
 - Use of pathlib for path management to improve cross-platform compatibility

@@ -22,8 +22,8 @@ logs/
 
 venv/
 .vscode/
-models/*
-!models/.gitkeep
+server/models/*
+!server/models/.gitkeep
 
 datasets/test/
 datasets/train/

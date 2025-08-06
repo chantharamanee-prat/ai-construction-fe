@@ -8,7 +8,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imagePath }) => {
   return (
     <div style={{ border: '1px solid #ccc', marginBottom: '10px' }}>
       <img
-        src={`/datasets/construction_raw_images/${imagePath}`}
+        src={`/api/images/${imagePath}`}
         alt="Construction site"
         style={{ maxWidth: '100%', maxHeight: '400px' }}
       />

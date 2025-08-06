@@ -1,6 +1,9 @@
 # Active Context
 
 ## Current Focus
+- API Development:
+  - Implemented core endpoints for image serving and annotation saving
+  - Integrated with frontend annotation tool
 - Implemented robust evaluation pipeline for detection (YOLOv8) and progress regression (custom simplified model) in `evaluate.py`.
 - Standardized outputs: CSV summary and optional figures for qualitative inspection.
 

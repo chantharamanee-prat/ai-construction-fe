@@ -25,6 +25,21 @@
 ## Dependencies
 ### requirements.txt
 ultralytics==8.3.174
+fastapi==0.109.1
+uvicorn==0.27.0
+python-multipart==0.0.6
+
+## API Implementation
+- Framework: FastAPI
+- Endpoints:
+  - GET /api/images - Lists available images
+  - GET /api/images/{image_path} - Serves image file
+  - POST /api/annotations - Saves annotation data
+- Middleware: CORS configured to allow all origins
+- Data Flow:
+  - API routes delegate to handler modules
+  - Uses pathlib for filesystem operations
+  - Models define request/response schemas
 
 ## Evaluation Implementation (Current)
 - Detection evaluation:

@@ -1,6 +1,11 @@
 # Progress
 
 ## What Works
+- API Implementation:
+  - Core endpoints implemented:
+    - GET /api/images - Lists available images
+    - GET /api/images/{image_path} - Serves image file
+    - POST /api/annotations - Saves annotation data
 - `evaluate.py` successfully evaluates:
   - Detection metrics via Ultralytics YOLOv8 `model.val()` using `data.yaml`.
   - Progress regression metrics (MAE, RMSE in [0,1]) using the simplified model trained by `train.py` when weights are available.

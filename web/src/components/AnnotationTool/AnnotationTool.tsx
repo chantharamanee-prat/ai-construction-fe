@@ -11,15 +11,21 @@ const AnnotationTool: React.FC = () => {
 
   useEffect(() => {
     async function loadImages() {
-      const imgs = await fetchImages();
-      setImages(imgs);
-      if (imgs.length > 0) {
-        setCurrentImageIndex(0);
-        setAnnotation({
-          imageName: imgs[0],
-          progress: 0,
-          boxes: [],
-        });
+      try {
+        const imgs = await fetchImages();
+        setImages(imgs);
+        if (imgs.length > 0) {
+          setCurrentImageIndex(0);
+          setAnnotation({
+            imageName: imgs[0],
+            progress: 0,
+            boxes: [],
+          });
+        } else {
+          alert('No images found');
+        }
+      } catch (error) {
+        alert('Failed to load images: ' + (error instanceof Error ? error.message : String(error)));
       }
     }
     loadImages();
@@ -39,8 +45,12 @@ const AnnotationTool: React.FC = () => {
 
   const handleSave = async () => {
     if (annotation) {
-      await saveAnnotation(annotation);
-      alert('Annotation saved');
+      try {
+        await saveAnnotation(annotation);
+        alert('Annotation saved successfully');
+      } catch (error) {
+        alert('Failed to save annotation: ' + (error instanceof Error ? error.message : String(error)));
+      }
     }
   };
 

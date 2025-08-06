@@ -1,5 +1,13 @@
 # Product Context
 
+## API Role
+- Enables annotation workflow between frontend and backend
+- Provides endpoints for:
+  - Listing available images
+  - Serving image files
+  - Saving annotations
+- Designed to support the construction progress monitoring PoC
+
 ## Why this project exists
 To assess the feasibility of using YOLO models for construction progress monitoring.
 
