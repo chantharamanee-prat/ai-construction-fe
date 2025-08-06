@@ -60,13 +60,13 @@ python evaluate.py \
 ```
 
 Common arguments:
-- `--weights`: YOLO detection weights (default: `yolov8n.pt`)
-- `--data`: Path to data.yaml (default: `data.yaml`)
-- `--imgsz`: Image size for evaluation (default: 640)
-- `--batch`: Batch size for YOLO validation (default: 8)
-- `--device`: CUDA device (e.g., `0`) or `cpu` (default: auto)
+- `--weights`: YOLO detection weights (default: from `configs/training.yaml` or `yolov8n.pt`)
+- `--data`: Path to data.yaml (default: from `configs/training.yaml` or `data.yaml`)
+- `--imgsz`: Image size for evaluation (default: from `configs/training.yaml` or 640)
+- `--batch`: Batch size for YOLO validation (default: from `configs/training.yaml` or 8)
+- `--device`: CUDA device (e.g., `0`) or `cpu` (default: from `configs/training.yaml` or auto)
 - `--split`: Which split to evaluate against for both detection and progress (choices: `val`, `test`; default: `val`)
-- `--progress-weights`: Path to regression weights (default: `models/construction_progress.pt`)
+- `--progress-weights`: Path to regression weights (default: from `configs/training.yaml` or `models/construction_progress.pt`)
 - `--save-dir`: Base directory for reports (default: `reports`)
 - `--save-figs`: If provided, saves up to 5 visualization images
 
@@ -133,3 +133,9 @@ python evaluate.py --weights yolov8n.pt --data data.yaml --imgsz 768 --device 0
 
 - You can extend the script to export confusion matrices and PR curves by enabling Ultralytics save options and copying outputs to `reports/figures`.
 - Consider adding a scatter plot of GT vs predicted progress and error histograms for deeper analysis.
+
+## Visualization Enhancements Added
+
+- Added CLI option `--save-curves` to save confusion matrix and PR/ROC curves (currently limited by raw data availability).
+- Added regression scatter plot (GT vs Pred) and error histogram visualizations saved when `--save-figs` is used.
+- Visualizations are saved in the `reports/figures` directory.

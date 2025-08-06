@@ -21,7 +21,6 @@
 - Optional: Add confusion matrix and PR/ROC curves exports and include in `reports/figures`.
 - Optional: Save per-class AP to CSV/JSON for deeper analysis.
 - Optional: Add regression scatter plot (GT vs Pred) and error histograms.
-- Optional: Config-driven defaults (pull from `configs/training.yaml` and `configs/dataset.yaml`) to minimize CLI args.
 - Optional: Add unit tests for label parsing and regression evaluation paths.
 
 ## Known Issues
@@ -30,4 +29,8 @@
 - Progress errors are normalized; convert to percentage by multiplying by 100 for presentation.
 
 ## Current Status
-- Evaluation pipeline is functional and documented. Ready for PoC evaluation runs on `val` or `test` splits.
+- Evaluation pipeline is functional and documented. Config-driven defaults added to `evaluate.py` and documentation updated. Ready for PoC evaluation runs on `val` or `test` splits.
+- Visualization enhancements added to `evaluate.py`:
+  - Regression scatter plot and error histogram visualizations saved with `--save-figs`.
+  - CLI option `--save-curves` added for confusion matrix and PR/ROC curves (limited by raw data availability).
+  - Updated `docs/EVALUATION_GUIDE.md` to reflect new visualization features.
