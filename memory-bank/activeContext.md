@@ -38,7 +38,16 @@
 - Use `pathlib.Path`.
 - Keep evaluation CLI consistent with training configs (`configs/training.yaml`, `configs/dataset.yaml`).
 - Normalize progress in [0,1]; label format must include the `# progress:` comment line.
-
+- Follow Python code conventions:
+  - Use relative imports within the `src` package (e.g., `from .custom_dataset import ...`).
+  - Organize all Python source files under the `src/` directory.
+  - Maintain clear separation of source code and other project files.
+  - Use consistent formatting and docstrings for functions and classes.
+  - Use type hints where appropriate.
+  - Use logging for all informational and error messages.
+  - Use pathlib for all path manipulations.
+  - Keep CLI argument parsing consistent and flexible.
+  - Ensure all scripts can be run from the project root with `python src/<script>.py`.
 ## Known Issues / Considerations
 - If `models/construction_progress.pt` does not exist or incompatible, progress evaluation is skipped with a warning.
 - Requires `data.yaml` to define `val` and `test` if those splits are used for detection evaluation.

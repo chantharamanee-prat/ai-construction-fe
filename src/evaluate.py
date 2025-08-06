@@ -12,7 +12,7 @@ from PIL import Image
 from torchvision import transforms
 import yaml
 
-from custom_dataset import ConstructionProgressDataset
+from .custom_dataset import ConstructionProgressDataset
 from ultralytics import YOLO
 
 

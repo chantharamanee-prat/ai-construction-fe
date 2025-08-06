@@ -3,7 +3,7 @@ import yaml
 import torch
 from torch.utils.data import DataLoader
 import pathlib
-from custom_dataset import ConstructionProgressDataset
+from .custom_dataset import ConstructionProgressDataset
 import torch.nn as nn
 import torch.optim as optim
 from ultralytics import YOLO
