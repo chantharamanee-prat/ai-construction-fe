@@ -7,7 +7,7 @@ import yaml
 def split_dataset(config_path: str) -> None:
     """
     Split dataset into train, val, and test sets based on configuration,
-    preserving progress percentage distributions.
+    supporting both classification and detection datasets.
 
     Args:
         config_path (str): Path to YAML configuration file.
@@ -18,12 +18,12 @@ def split_dataset(config_path: str) -> None:
         config = yaml.safe_load(f)
 
     images_root_dir = pathlib.Path(config['images_dir'])
-    labels_dir = pathlib.Path(config['labels_dir'])
     output_dir = pathlib.Path(config['output_dir'])
     train_ratio = config['train_ratio']
     val_ratio = config['val_ratio']
     test_ratio = config['test_ratio']
     seed = config['seed']
+    dataset_type = config.get('dataset_type', 'detection')  # 'classification' or 'detection'
 
     # Validate ratios sum to 1.0
     total_ratio = train_ratio + val_ratio + test_ratio
@@ -33,6 +33,68 @@ def split_dataset(config_path: str) -> None:
 
     random.seed(seed)
 
+    if dataset_type == 'classification':
+        split_classification_dataset(images_root_dir, output_dir, train_ratio, val_ratio, test_ratio)
+    else:
+        split_detection_dataset(config, images_root_dir, output_dir, train_ratio, val_ratio, test_ratio)
+
+def split_classification_dataset(images_root_dir, output_dir, train_ratio, val_ratio, test_ratio):
+    """Split classification dataset where each folder represents a class."""
+    
+    # Collect images grouped by class (folder names)
+    class_groups = {}
+    for class_dir in images_root_dir.iterdir():
+        if class_dir.is_dir():
+            class_name = class_dir.name
+            class_images = []
+            for img_path in class_dir.iterdir():
+                if img_path.suffix.lower() in {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}:
+                    class_images.append(img_path)
+            if class_images:
+                class_groups[class_name] = class_images
+                logging.info(f"Found {len(class_images)} images in class '{class_name}'")
+
+    if not class_groups:
+        logging.error(f"No images found in {images_root_dir} with class subfolders")
+        return
+
+    splits = {"train": [], "val": [], "test": []}
+
+    # Split each class separately to maintain class distribution
+    for class_name, images in class_groups.items():
+        random.shuffle(images)
+        total = len(images)
+        train_count = int(total * train_ratio)
+        val_count = int(total * val_ratio)
+        test_count = total - train_count - val_count
+
+        splits["train"].extend([(img, class_name) for img in images[:train_count]])
+        splits["val"].extend([(img, class_name) for img in images[train_count:train_count + val_count]])
+        splits["test"].extend([(img, class_name) for img in images[train_count + val_count:]])
+
+        logging.info(f"Class '{class_name}': Train={train_count}, Val={val_count}, Test={test_count}")
+
+    # Create output directories for classification
+    for split in splits:
+        for class_name in class_groups.keys():
+            (output_dir / split / class_name).mkdir(parents=True, exist_ok=True)
+
+    # Copy images to respective class directories
+    for split, files in splits.items():
+        for img_path, class_name in files:
+            dst_img_path = output_dir / split / class_name / img_path.name
+            shutil.copy2(img_path, dst_img_path)
+
+    logging.info(f"Classification dataset split completed:")
+    logging.info(f"  Train: {len(splits['train'])} images")
+    logging.info(f"  Val: {len(splits['val'])} images")
+    logging.info(f"  Test: {len(splits['test'])} images")
+
+def split_detection_dataset(config, images_root_dir, output_dir, train_ratio, val_ratio, test_ratio):
+    """Split detection dataset with images and corresponding label files."""
+    
+    labels_dir = pathlib.Path(config['labels_dir'])
+    
     # Collect images grouped by progress percentage from subfolder names
     progress_groups = {}
     for progress_dir in images_root_dir.iterdir():
@@ -83,7 +145,7 @@ def split_dataset(config_path: str) -> None:
             if label_path.exists():
                 shutil.copy2(label_path, dst_label_path)
 
-    logging.info(f"Dataset split completed:")
+    logging.info(f"Detection dataset split completed:")
     logging.info(f"  Train: {len(splits['train'])} images")
     logging.info(f"  Val: {len(splits['val'])} images")
     logging.info(f"  Test: {len(splits['test'])} images")

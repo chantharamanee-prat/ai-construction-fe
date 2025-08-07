@@ -1,8 +1,12 @@
-# Configuration for dataset splitting
-images_dir: datasets/raw_images
-labels_dir: datasets/labels
-output_dir: datasets
+# Dataset configuration
+dataset_type: "classification" # or "detection"
+images_dir: "datasets/raw_images"
+output_dir: "datasets/split"
+
+# Split ratios (must sum to 1.0)
 train_ratio: 0.7
 val_ratio: 0.2
 test_ratio: 0.1
+
+# Random seed for reproducible splits
 seed: 42
