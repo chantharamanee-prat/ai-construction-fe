@@ -68,10 +68,9 @@ const AnnotationTool: React.FC = () => {
 
   const handleSave = async () => {
     if (annotation) {
-      console.log("Saving annotation:", annotation);
       try {
         await saveAnnotation(annotation);
-        alert("Annotation saved successfully");
+        handleNextImage();
       } catch (error) {
         alert(
           "Failed to save annotation: " +
@@ -161,6 +160,24 @@ const AnnotationTool: React.FC = () => {
           progress={annotation?.progress || 0}
           onChange={handleProgressChange}
         />
+        <div
+          style={{
+            display: "flex",
+            marginTop: "10px",
+            justifyContent: "center",
+          }}
+        >
+          <button style={{ marginRight: "20px" }} onClick={handleSave}>
+            Save
+          </button>
+
+          <button
+            onClick={handleNextImage}
+            disabled={!dataset || currentImageIndex >= dataset.length - 1}
+          >
+            Next
+          </button>
+        </div>
 
         {/* Debug Information */}
         {imageMetadata && (
@@ -201,16 +218,6 @@ const AnnotationTool: React.FC = () => {
           </div>
         )}
       </div>
-      <button style={{ marginRight: "20px" }} onClick={handleSave}>
-        Save
-      </button>
-
-      <button
-        onClick={handleNextImage}
-        disabled={!dataset || currentImageIndex >= dataset.length - 1}
-      >
-        Next
-      </button>
     </div>
   );
 };
