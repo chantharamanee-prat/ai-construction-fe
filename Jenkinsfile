@@ -6,7 +6,7 @@ node {
     }
     stage('Build') {
         if (scmVars.GIT_BRANCH.endsWith('/master')) {
-            sh 'docker build -t yolo-server-api -f server/Dockerfile .'
+            sh 'docker build -t yolo-server-api -f Dockerfile .'
             sh 'docker build -t yolo-server-web -f web/Dockerfile .'
         } else {
             echo "Skipped."
