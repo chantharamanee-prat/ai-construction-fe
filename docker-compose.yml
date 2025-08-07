@@ -1,13 +1,30 @@
-version: '3.8'
+version: "3.8"
 services:
-  ultralytics-cpu:
-    image: ultralytics/ultralytics:latest-cpu
-    ipc: host
-    tty: true
-    stdin_open: true
+  yolo-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yolo-server
+    ports:
+      - "9500:8000"
     networks:
       - yolo-network
-
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: yolo-web
+    ports:
+      - "9501:80"
+    networks:
+      - yolo-network
+  # ultralytics-cpu:
+  #   image: ultralytics/ultralytics:latest-cpu
+  #   ipc: host
+  #   tty: true
+  #   stdin_open: true
+  #   networks:
+  #     - yolo-network
 networks:
   yolo-network:
     driver: bridge
