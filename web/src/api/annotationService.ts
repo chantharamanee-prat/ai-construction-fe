@@ -56,12 +56,9 @@ export async function fetchImages(datasetName?: string): Promise<string[]> {
   return response.data;
 }
 
-export async function saveAnnotation(
-  annotation: Annotation,
-  datasetName?: string
-): Promise<void> {
-  const url = datasetName
-    ? `${VITE_BASE_API}/datasets/${encodeURIComponent(datasetName)}/annotations`
-    : `${VITE_BASE_API}/annotations`;
+export async function saveAnnotation(annotation: Annotation): Promise<void> {
+  const url = `${VITE_BASE_API}/annotations`;
+  console.log(annotation.imageName);
+  annotation.imageName = annotation.imageName.split("/")[2];
   await axios.post(url, annotation);
 }

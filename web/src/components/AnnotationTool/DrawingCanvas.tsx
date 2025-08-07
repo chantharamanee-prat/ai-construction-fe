@@ -223,7 +223,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 y={canvasBox.y}
                 width={canvasBox.width}
                 height={canvasBox.height}
-                stroke={hoveredBox === i ? "#000000" : classColor}
+                stroke={hoveredBox === i ? "#39FF14" : classColor}
                 strokeWidth={hoveredBox === i ? 3 : 2}
                 fill="transparent"
                 onMouseEnter={() => setHoveredBox(i)}
@@ -236,8 +236,17 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                 y={canvasBox.y - 15}
                 text={`${box.classId}: ${className}`}
                 fontSize={11}
-                fill={classColor}
+                fill={hoveredBox === i ? "#39FF14" : classColor}
                 fontStyle="bold"
+                // Add white background for readability
+                padding={2}
+                align="left"
+                verticalAlign="middle"
+                listening={false}
+                shadowColor="#fff"
+                shadowBlur={4}
+                shadowOffset={{ x: 0, y: 0 }}
+                shadowOpacity={1}
               />
               {/* Show coordinates on hover */}
               {hoveredBox === i && (
@@ -252,8 +261,16 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                     box.width
                   )} × ${formatCoordinate(box.height)}`}
                   fontSize={10}
-                  fill="#000"
-                  background="#fff"
+                  fill="#39FF14"
+                  // Add white background for readability
+                  padding={2}
+                  align="left"
+                  verticalAlign="middle"
+                  listening={false}
+                  shadowColor="#fff"
+                  shadowBlur={4}
+                  shadowOffset={{ x: 0, y: 0 }}
+                  shadowOpacity={1}
                 />
               )}
             </React.Fragment>
@@ -280,7 +297,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           y={10}
           text="Draw boxes within the green dashed boundary. Double-click to delete."
           fontSize={12}
-          fill="#666"
+          fill="#999"
         />
       </Layer>
     </Stage>

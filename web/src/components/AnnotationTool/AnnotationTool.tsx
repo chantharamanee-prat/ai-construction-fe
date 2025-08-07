@@ -12,11 +12,14 @@ import ProgressForm from "./ProgressForm";
 import ClassSelector, { type ClassId } from "./ClassSelector";
 
 const AnnotationTool: React.FC = () => {
-  const { datasetName } = useParams();
+  const { datasetName, index } = useParams();
+
   const navigate = useNavigate();
   const [dataset, setDataset] = useState<PercentageDataset[] | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [annotation, setAnnotation] = useState<PercentageDataset | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(
+    index ? +index : 0
+  );
+  const [annotation, setAnnotation] = useState<Annotation | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageMetadata, setImageMetadata] = useState<ImageMetadata | null>(
     null
@@ -32,9 +35,13 @@ const AnnotationTool: React.FC = () => {
 
         const datasetData = await fetchPercentageDataset(datasetName);
         setDataset(datasetData);
-        const firstDataset = datasetData[currentImageIndex];
-        setAnnotation(firstDataset);
-        setCurrentImageIndex(0);
+        const dataIndex = datasetData[currentImageIndex];
+        console.log(dataIndex);
+        setAnnotation({
+          boxes: dataIndex.boxes || [],
+          progress: dataIndex.progress || 0,
+          imageName: dataIndex.path,
+        });
       } catch (error) {
         alert(
           "Failed to load dataset: " +
@@ -45,7 +52,7 @@ const AnnotationTool: React.FC = () => {
       }
     }
     loadDataset();
-  }, [datasetName]);
+  }, [datasetName, index]);
 
   const handleBoxChange = (boxes: Annotation["boxes"]) => {
     if (annotation) {
@@ -60,29 +67,34 @@ const AnnotationTool: React.FC = () => {
   };
 
   const handleSave = async () => {
-    // if (annotation && datasetName) {
-    //   try {
-    //     await saveAnnotation(annotation, decodeURIComponent(datasetName));
-    //     alert('Annotation saved successfully');
-    //   } catch (error) {
-    //     alert('Failed to save annotation: ' + (error instanceof Error ? error.message : String(error)));
-    //   }
-    // }
+    if (annotation) {
+      console.log("Saving annotation:", annotation);
+      try {
+        await saveAnnotation(annotation);
+        alert("Annotation saved successfully");
+      } catch (error) {
+        alert(
+          "Failed to save annotation: " +
+            (error instanceof Error ? error.message : String(error))
+        );
+      }
+    }
   };
 
   const handleNextImage = () => {
-    // if (dataset && currentImageIndex < dataset.length - 1) {
-    //   const nextIndex = currentImageIndex + 1;
-    //   const nextImage = dataset.images[nextIndex];
-    //   const existingAnnotation = dataset.annotations.find(a => a.imageName === nextImage);
-    //   setCurrentImageIndex(nextIndex);
-    //   setAnnotation(existingAnnotation || {
-    //     imageName: nextImage,
-    //     progress: 0,
-    //     boxes: [],
-    //   });
-    //   navigate(`/annotate/${datasetName}/${nextImage}`);
-    // }
+    if (dataset && currentImageIndex < dataset.length - 1) {
+      const nextIndex = currentImageIndex + 1;
+      setCurrentImageIndex(nextIndex);
+      const nextImage = dataset[nextIndex];
+      setAnnotation({
+        boxes: nextImage.boxes || [],
+        progress: nextImage.progress || 0,
+        imageName: nextImage.path,
+      });
+      navigate(`/annotate/${datasetName}/${nextIndex}`);
+    } else {
+      navigate("/");
+    }
   };
 
   const handleBackToList = () => {
@@ -189,12 +201,15 @@ const AnnotationTool: React.FC = () => {
           </div>
         )}
       </div>
-      <button onClick={handleSave}>Save Annotation</button>
+      <button style={{ marginRight: "20px" }} onClick={handleSave}>
+        Save
+      </button>
+
       <button
         onClick={handleNextImage}
         disabled={!dataset || currentImageIndex >= dataset.length - 1}
       >
-        Next Image
+        Next
       </button>
     </div>
   );

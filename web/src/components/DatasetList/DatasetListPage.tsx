@@ -1,36 +1,34 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import './DatasetListPage.css'
-import { fetchDatasets, type Dataset } from '../../api/annotationService'
-
-
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./DatasetListPage.css";
+import { fetchDatasets, type Dataset } from "../../api/annotationService";
 
 export default function DatasetListPage() {
-  const [datasets, setDatasets] = useState<Dataset[]>([])
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         let response = await fetchDatasets();
-        response = response.sort((a,b) => a.progress - b.progress )
-        setDatasets(response)
+        response = response.sort((a, b) => a.progress - b.progress);
+        setDatasets(response);
       } catch (error) {
-        console.error('Error fetching datasets:', error)
+        console.error("Error fetching datasets:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const handleAnnotate = (datasetName: string) => {
-    navigate(`/annotate/${encodeURIComponent(datasetName)}`)
-  }
+    navigate(`/annotate/${datasetName}/0`);
+  };
 
-  if (loading) return <div>Loading datasets...</div>
+  if (loading) return <div>Loading datasets...</div>;
 
   return (
     <div className="dataset-list-container">
@@ -45,7 +43,7 @@ export default function DatasetListPage() {
           </tr>
         </thead>
         <tbody>
-          {datasets.map(dataset => (
+          {datasets.map((dataset) => (
             <tr key={dataset.name}>
               <td>{dataset.name}</td>
               <td>{dataset.image_count}</td>
@@ -60,5 +58,5 @@ export default function DatasetListPage() {
         </tbody>
       </table>
     </div>
-  )
+  );
 }
