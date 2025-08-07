@@ -1,6 +1,8 @@
 # Dataset configuration
-dataset_type: "classification" # or "detection"
+## classification or detection
+dataset_type: "detection"
 images_dir: "datasets/raw_images"
+labels_dir: "datsets/labels"
 output_dir: "datasets/split"
 
 # Split ratios (must sum to 1.0)

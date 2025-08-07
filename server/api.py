@@ -120,6 +120,7 @@ async def save_annotation(annotation: Annotation):
 async def predict_image(file: UploadFile = File(...)):
     """Run YOLO model prediction on an uploaded image."""
     file_bytes = await file.read()
-    model_path = str(BASE_DIR / "models" / "progress-classification.pt")
+    # Use the best trained model from the most recent training run
+    model_path = str(BASE_DIR.parent /"server" / "ml_scripts" / "classification" / "models" / "progress-classification.pt")
     predictions = predict_image_yolo(model_path, file_bytes, Path(file.filename).suffix)
     return {"predictions": predictions}

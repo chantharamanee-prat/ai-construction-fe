@@ -17,6 +17,17 @@ def predict_image_yolo(model_path: str, file_bytes: bytes, file_suffix: str):
         model = YOLO(model_path)
         results = model.predict(tmp_path)
 
+        # Define class names mapping for construction progress classification
+        class_names = {
+            0: "10%",
+            1: "15%", 
+            2: "20%",
+            3: "25%",
+            4: "30%",
+            5: "40%",
+            6: "50%"
+        }
+
         # Parse results (classification or detection)
         predictions = []
         for r in results:
@@ -25,15 +36,17 @@ def predict_image_yolo(model_path: str, file_bytes: bytes, file_suffix: str):
                 top_indices = r.probs.top5
                 top_scores = r.probs.top5conf
                 for idx, score in zip(top_indices, top_scores):
+                    class_name = class_names.get(int(idx), f"Class_{int(idx)}")
                     predictions.append({
-                        "class": int(idx),
+                        "class": class_name,
                         "confidence": float(score)
                     })
             elif hasattr(r, 'boxes') and r.boxes is not None:
                 # For detection
                 for box in r.boxes:
+                    class_name = class_names.get(int(box.cls[0]), f"Class_{int(box.cls[0])}")
                     predictions.append({
-                        "class": int(box.cls[0]),
+                        "class": class_name,
                         "confidence": float(box.conf[0]),
                         "box": [float(x) for x in box.xyxy[0].tolist()]
                     })
