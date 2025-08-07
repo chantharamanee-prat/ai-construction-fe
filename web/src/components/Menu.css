@@ -1,0 +1,21 @@
+.main-menu {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.main-menu a {
+  color: inherit;
+  text-decoration: none;
+  font-size: 1.2em;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.main-menu a.active,
+.main-menu a:hover {
+  background: #646cff22;
+  color: #646cff;
+}

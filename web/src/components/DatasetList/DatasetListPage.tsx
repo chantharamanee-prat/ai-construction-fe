@@ -36,19 +36,19 @@ export default function DatasetListPage() {
       <table>
         <thead>
           <tr>
-            <th>Dataset</th>
-            <th>Images</th>
-            <th>Annotated</th>
-            <th>Actions</th>
+            <th align="center">Dataset</th>
+            <th align="center">Images</th>
+            <th align="center">Annotated</th>
+            <th align="center">Actions</th>
           </tr>
         </thead>
         <tbody>
           {datasets.map((dataset) => (
             <tr key={dataset.name}>
-              <td>{dataset.name}</td>
-              <td>{dataset.image_count}</td>
-              <td>{dataset.annotated_count}</td>
-              <td>
+              <td align="center">{dataset.name}</td>
+              <td align="center">{dataset.image_count}</td>
+              <td align="center">{dataset.annotated_count}</td>
+              <td align="center">
                 <button onClick={() => handleAnnotate(dataset.name)}>
                   Annotate
                 </button>
