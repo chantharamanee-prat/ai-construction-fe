@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './DatasetListPage.css'
-import { fetchDatasets, type Dataset } from '../../api/annotation'
+import { fetchDatasets, type Dataset } from '../../api/annotationService'
 
 
 
@@ -27,7 +27,7 @@ export default function DatasetListPage() {
   }, [])
 
   const handleAnnotate = (datasetName: string) => {
-    navigate(`/annotate?dataset=${datasetName}`)
+    navigate(`/annotate/${encodeURIComponent(datasetName)}`)
   }
 
   if (loading) return <div>Loading datasets...</div>

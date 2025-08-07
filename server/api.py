@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from urllib.parse import unquote
 
 from typing import List
 import os
@@ -9,7 +10,7 @@ from pathlib import Path
 from api_handlers.image_loader import list_images, get_image_path
 from api_handlers.annotation_handler import save_annotation_to_file
 from dto.annotation import Annotation
-from dto.image import ImageDTO, DatasetDTO
+from dto.image import ImageDTO, DatasetDTO, BoxDTO, AnnotatedImageDTO
 
 app = FastAPI()
 
@@ -78,6 +79,50 @@ async def serve_image(image_path: str):
     if not full_path or not full_path.exists():
         raise HTTPException(status_code=404, detail="Image not found")
     return FileResponse(full_path)
+
+@app.get("/api/datasets/{dataset_name}", response_model=List[AnnotatedImageDTO])
+async def get_dataset_images(dataset_name: str):
+    """Get all images in a specific dataset directory with their annotations"""
+    decoded_name = unquote(dataset_name)
+    dataset_path = DATASET_DIR / decoded_name
+    
+    if not dataset_path.exists() or not dataset_path.is_dir():
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    images = []
+    for image_path in list_images(dataset_path):
+        label_path = LABELS_DIR / Path(image_path).with_suffix(".txt").name
+        annotated = label_path.exists()
+        progress = 0.0
+        
+        boxes = []
+        if annotated:
+            try:
+                with open(label_path, "r") as f:
+                    lines = f.readlines()
+                    if lines and lines[0].startswith("# progress:"):
+                        progress = float(lines[0].split(":")[1].strip())
+                    for line in lines[1:]:
+                        if line.strip():
+                            parts = line.split()
+                            boxes.append(BoxDTO(
+                                classId=int(parts[0]),
+                                xCenter=float(parts[1]),
+                                yCenter=float(parts[2]),
+                                width=float(parts[3]),
+                                height=float(parts[4])
+                            ))
+            except Exception as e:
+                print(f"Error parsing annotation {label_path}: {e}")
+        
+        images.append(AnnotatedImageDTO(
+            path=str( "/{0}/{1}".format(dataset_name, image_path)),
+            annotated=annotated,
+            progress=progress,
+            boxes=boxes
+        ))
+    
+    return images
 
 @app.post("/api/annotations", status_code=201)
 async def save_annotation(annotation: Annotation):

@@ -8,7 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DatasetListPage />} />
-        <Route path="/annotate/:imagePath" element={<AnnotationTool />} />
+        <Route path="/annotate/:datasetName" element={<AnnotationTool />} />
       </Routes>
     </BrowserRouter>
   )
