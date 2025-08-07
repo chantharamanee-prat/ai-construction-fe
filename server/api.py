@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import unquote
 
@@ -11,6 +11,10 @@ from api_handlers.image_loader import list_images, get_image_path
 from api_handlers.annotation_handler import save_annotation_to_file
 from dto.annotation import Annotation
 from dto.image import ImageDTO, DatasetDTO, BoxDTO, AnnotatedImageDTO
+
+# YOLO import
+import tempfile
+from api_handlers.ml_handler import predict_image_yolo
 
 app = FastAPI()
 
@@ -110,3 +114,12 @@ async def save_annotation(annotation: Annotation):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"message": "Annotation saved successfully"}
+
+
+@app.post("/api/predict")
+async def predict_image(file: UploadFile = File(...)):
+    """Run YOLO model prediction on an uploaded image."""
+    file_bytes = await file.read()
+    model_path = str(BASE_DIR / "models" / "progress-classification.pt")
+    predictions = predict_image_yolo(model_path, file_bytes, Path(file.filename).suffix)
+    return {"predictions": predictions}

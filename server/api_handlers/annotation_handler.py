@@ -20,7 +20,7 @@ def save_annotation_to_file(labels_dir: Path, annotation: Annotation) -> None:
     # Prepare lines to write
     lines = []
     # Progress comment line
-    lines.append(f"# progress: {annotation.progress}")
+    # lines.append(f"# progress: {annotation.progress}")
 
     # Each box line: classId xCenter yCenter width height (floats formatted to 6 decimals)
     for box in annotation.boxes:

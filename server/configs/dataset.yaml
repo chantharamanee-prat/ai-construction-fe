@@ -4,9 +4,9 @@ images_dir: "datasets/raw_images"
 output_dir: "datasets/split"
 
 # Split ratios (must sum to 1.0)
-train_ratio: 0.7
+train_ratio: 0.8
 val_ratio: 0.2
-test_ratio: 0.1
+test_ratio: 0
 
 # Random seed for reproducible splits
 seed: 42
