@@ -68,22 +68,28 @@ def _load_progress_model(weights_path: Path, device: torch.device) -> Optional[t
         logging.warning(f"Progress regression weights not found at {weights_path}")
         return None
 
-    # Mirror the architecture from train.py:create_simple_model
+    # Mirror the EXACT architecture from train.py:create_simple_model
     model = torch.nn.Sequential(
         torch.nn.Conv2d(3, 32, 3, padding=1),
+        torch.nn.BatchNorm2d(32),  # Add missing BatchNorm2d
         torch.nn.ReLU(),
         torch.nn.MaxPool2d(2),
         torch.nn.Conv2d(32, 64, 3, padding=1),
+        torch.nn.BatchNorm2d(64),  # Add missing BatchNorm2d
         torch.nn.ReLU(),
         torch.nn.MaxPool2d(2),
         torch.nn.Conv2d(64, 128, 3, padding=1),
+        torch.nn.BatchNorm2d(128),  # Add missing BatchNorm2d
         torch.nn.ReLU(),
         torch.nn.AdaptiveAvgPool2d(1),
         torch.nn.Flatten(),
         torch.nn.Linear(128, 64),
         torch.nn.ReLU(),
-        torch.nn.Dropout(0.2),
-        torch.nn.Linear(64, 1),
+        torch.nn.Dropout(0.5),  # Match dropout rate
+        torch.nn.Linear(64, 32),  # Add missing intermediate layer
+        torch.nn.ReLU(),
+        torch.nn.Dropout(0.3),   # Add missing dropout
+        torch.nn.Linear(32, 1),  # Change from 64->1 to 32->1
         torch.nn.Sigmoid(),
     )
     try:

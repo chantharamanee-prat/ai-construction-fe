@@ -10,6 +10,16 @@ from ultralytics import YOLO
 import numpy as np
 from pathlib import Path
 
+from torchvision import transforms
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Resize((640, 640)),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
 def custom_collate_fn(batch):
     """Custom collate function to handle variable-length bounding boxes"""
     images, bboxes_list, progress_list = zip(*batch)
@@ -129,19 +139,25 @@ def create_simple_model(num_classes=1):
     """Create a simplified model for progress prediction only"""
     return nn.Sequential(
         nn.Conv2d(3, 32, 3, padding=1),
+        nn.BatchNorm2d(32),  # Add batch normalization
         nn.ReLU(),
         nn.MaxPool2d(2),
         nn.Conv2d(32, 64, 3, padding=1),
+        nn.BatchNorm2d(64),
         nn.ReLU(),
         nn.MaxPool2d(2),
         nn.Conv2d(64, 128, 3, padding=1),
+        nn.BatchNorm2d(128),
         nn.ReLU(),
         nn.AdaptiveAvgPool2d(1),
         nn.Flatten(),
         nn.Linear(128, 64),
         nn.ReLU(),
-        nn.Dropout(0.2),
-        nn.Linear(64, num_classes),
+        nn.Dropout(0.5),  # Increase dropout
+        nn.Linear(64, 32),  # Add intermediate layer
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(32, num_classes),
         nn.Sigmoid()
     )
 
@@ -167,45 +183,59 @@ def main(config_path: str = "configs/training.yaml") -> None:
     train_images_dir = pathlib.Path(data_cfg['train']).parent / "images"
     train_labels_dir = pathlib.Path(data_cfg['train']).parent / "labels"
     
+    # Add validation paths
+    val_images_dir = pathlib.Path(data_cfg.get('val', data_cfg['train'])).parent / "images"
+    val_labels_dir = pathlib.Path(data_cfg.get('val', data_cfg['train'])).parent / "labels"
+    
     logging.info(f"Train images dir: {train_images_dir}")
     logging.info(f"Train labels dir: {train_labels_dir}")
 
-    # Create dataset and dataloader
+    # Create datasets and dataloaders
     try:
-        dataset = ConstructionProgressDataset(train_images_dir, train_labels_dir, transform=None, img_size=config.get('imgsz', 640))
-        dataloader = DataLoader(dataset, batch_size=config['batch'], shuffle=True, num_workers=0, collate_fn=custom_collate_fn)  # Set to 0 to avoid multiprocessing issues
-        logging.info(f"Dataset loaded with {len(dataset)} samples")
+        train_dataset = ConstructionProgressDataset(train_images_dir, train_labels_dir, transform=transform, img_size=config.get('imgsz', 640))
+        val_dataset = ConstructionProgressDataset(val_images_dir, val_labels_dir, transform=transform, img_size=config.get('imgsz', 640))
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=config['batch'], shuffle=True, num_workers=0, collate_fn=custom_collate_fn)
+        val_dataloader = DataLoader(val_dataset, batch_size=config['batch'], shuffle=False, num_workers=0, collate_fn=custom_collate_fn)
+        
+        logging.info(f"Train dataset: {len(train_dataset)} samples")
+        logging.info(f"Val dataset: {len(val_dataset)} samples")
     except Exception as e:
         logging.error(f"Error creating dataset: {e}")
         return
 
-    # Create model - using simplified approach for now
+    # Create model
     try:
-        # Option 1: Use simplified progress-only model
         model = create_simple_model(num_classes=1).to(device)
         logging.info("Using simplified progress prediction model")
-        
-        # Option 2: Try to load YOLO model (commented out for now due to complexity)
-        # base_model = YOLO('yolov8n.pt')
-        # model = ProgressYOLO(base_model.model).to(device)
-        
     except Exception as e:
         logging.error(f"Error creating model: {e}")
         return
 
-    # Setup optimizer
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    # Setup optimizer with improved parameters
+    optimizer = optim.AdamW(model.parameters(), 
+                           lr=float(config.get('learning_rate', 0.001)),
+                           weight_decay=float(config.get('weight_decay', 1e-4)))
+    
+    # Add learning rate scheduler
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config['epochs'])
+    
     criterion = nn.MSELoss()
 
     epochs = config['epochs']
+    best_val_loss = float('inf')
+    patience = config.get('early_stopping_patience', 20)
+    patience_counter = 0
+    
     logging.info(f"Starting training for {epochs} epochs")
 
-    # Training loop for simplified model
+    # Training loop with validation
     for epoch in range(epochs):
+        # Training phase
         model.train()
-        running_loss = 0.0
+        train_loss = 0.0
         
-        for batch_idx, (images, labels, progress) in enumerate(dataloader):
+        for batch_idx, (images, labels, progress) in enumerate(train_dataloader):
             images = images.to(device)
             progress = progress.to(device).float()
 
@@ -216,21 +246,51 @@ def main(config_path: str = "configs/training.yaml") -> None:
             loss = criterion(outputs.squeeze(), progress)
 
             loss.backward()
+            
+            # Gradient clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
             optimizer.step()
 
-            running_loss += loss.item()
+            train_loss += loss.item()
 
             if batch_idx % 10 == 0:
-                logging.info(f'Epoch {epoch+1}/{epochs}, Batch {batch_idx}/{len(dataloader)}, '
-                           f'Loss: {loss.item():.4f}')
+                logging.info(f'Epoch {epoch+1}/{epochs}, Batch {batch_idx}/{len(train_dataloader)}, '
+                           f'Loss: {loss.item():.4f}, LR: {optimizer.param_groups[0]["lr"]:.6f}')
 
-        avg_loss = running_loss / len(dataloader)
-        logging.info(f"Epoch {epoch+1}/{epochs} completed, Average Loss: {avg_loss:.4f}")
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for images, labels, progress in val_dataloader:
+                images = images.to(device)
+                progress = progress.to(device).float()
+                
+                outputs = model(images)
+                loss = criterion(outputs.squeeze(), progress)
+                val_loss += loss.item()
 
-    # Save model
-    save_path = config['save_path']
-    torch.save(model.state_dict(), save_path)
-    logging.info(f"Model trained and saved to {save_path}")
+        avg_train_loss = train_loss / len(train_dataloader)
+        avg_val_loss = val_loss / len(val_dataloader)
+        
+        scheduler.step()
+        
+        logging.info(f"Epoch {epoch+1}/{epochs} - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+
+        # Early stopping
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
+            patience_counter = 0
+            # Save best model
+            torch.save(model.state_dict(), config['save_path'])
+            logging.info(f"New best model saved with val loss: {avg_val_loss:.4f}")
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                logging.info(f"Early stopping triggered after {epoch+1} epochs")
+                break
+
+    logging.info(f"Training completed. Best validation loss: {best_val_loss:.4f}")
 
 if __name__ == "__main__":
     main()
