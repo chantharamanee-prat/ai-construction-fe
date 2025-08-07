@@ -51,27 +51,6 @@ async def get_datasets():
             ))
     return datasets
 
-@app.get("/api/images", response_model=List[ImageDTO])
-async def get_images():
-    images = []
-    for image_path in list_images(DATASET_DIR):
-        label_path = LABELS_DIR / Path(image_path).with_suffix(".txt").name
-        annotated = label_path.exists()
-        progress = 0.0
-        if annotated:
-            try:
-                with open(label_path, "r") as f:
-                    first_line = f.readline().strip()
-                    if first_line.startswith("# progress:"):
-                        progress = float(first_line.split(":")[1].strip())
-            except:
-                pass
-        images.append(ImageDTO(
-            path=image_path,
-            annotated=annotated,
-            progress=progress
-        ))
-    return images
 
 @app.get("/api/images/{image_path:path}")
 async def serve_image(image_path: str):
