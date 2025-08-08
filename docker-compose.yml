@@ -1,18 +1,14 @@
 version: "3.8"
 services:
   yolo-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: yolo-server-api
     container_name: yolo-server
     ports:
       - "9500:8000"
     networks:
       - yolo-network
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+    image: yolo-server-web
     container_name: yolo-web
     ports:
       - "9501:80"

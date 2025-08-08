@@ -15,7 +15,7 @@ node {
     stage('Deploy Docker') {
         if (scmVars.GIT_BRANCH.endsWith('/master')) {
             sh 'docker compose down'
-            sh 'docker compose up -d --build'
+            sh 'docker compose up -d'
         } else {
             echo "Skipped."
         }
