@@ -12,21 +12,37 @@ RUN apt-get update && \
         libsm6 \
         libxext6 \
         libxrender-dev \
+        libfontconfig1 \
+        libice6 \
+        libxi6 \
+        libxrandr2 \
+        libgl1-mesa-glx \
         git \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy server code
+# Copy server code and scripts
 COPY server/ ./server/
+COPY start-server.sh ./
+RUN chmod +x start-server.sh
 
-# Expose port (change if your server uses a different port)
+# Create necessary directories
+RUN mkdir -p runs models datasets
+
+# Expose port
 EXPOSE 8000
 
-# Set environment variables (optional, adjust as needed)
+# Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
-# Start the server (adjust the command as needed for your entrypoint)
-CMD ["python", "-m", "server.api"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start the server using the start script
+CMD ["./start-server.sh"]
