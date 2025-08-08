@@ -31,6 +31,10 @@ DATASET_DIR = BASE_DIR / "datasets" / "raw_images"
 LABELS_DIR = BASE_DIR / "datasets" / "labels"
 
 
+@app.get("/health")
+async def get_health():
+    return "Ok"
+
 @app.get("/api/datasets", response_model=List[DatasetDTO])
 async def get_datasets():
     datasets = []
