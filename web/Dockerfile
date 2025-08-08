@@ -2,14 +2,15 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+
 # Copy package files first
-COPY web/package*.json ./
+COPY package*.json ./
 
 # Install dependencies (including dev dependencies for build)
 RUN npm ci
 
 # Copy source code
-COPY web/ .
+COPY . .
 
 # Build the application
 RUN npm run build
