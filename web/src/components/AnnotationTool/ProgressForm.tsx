@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ProgressFormProps {
   progress: number;
@@ -12,7 +12,7 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ progress, onChange }) => {
   };
 
   return (
-    <div style={{ marginTop: '10px' }}>
+    <div style={{ marginTop: "10px" }}>
       <label htmlFor="progress">Progress (%): </label>
       <input
         id="progress"
@@ -20,7 +20,8 @@ const ProgressForm: React.FC<ProgressFormProps> = ({ progress, onChange }) => {
         min={0}
         max={100}
         value={progress}
-        onChange={handleInputChange}
+        disabled={true}
+        // onChange={handleInputChange}
       />
     </div>
   );

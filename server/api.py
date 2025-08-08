@@ -50,7 +50,7 @@ async def get_datasets():
                 if label_path.exists():
                     annotated_count += 1
             
-            progress = dataset_dir.name.replace("%", "")
+            progress = dataset_dir.name
             datasets.append(DatasetDTO(
                 name=dataset_dir.name,
                 image_count=image_count,
@@ -81,17 +81,21 @@ async def get_dataset_images(dataset_name: str):
         label_path = LABELS_DIR / Path(image_path).with_suffix(".txt").name
         annotated = label_path.exists()
         progress = 0.0
-        
+
+        try:
+            progress = float(decoded_name)
+        except:
+            print("error to parse progress")
+
         boxes = []
         if annotated:
             try:
                 with open(label_path, "r") as f:
-                    lines = f.readlines()
-                    if lines and lines[0].startswith("# progress:"):
-                        progress = float(lines[0].split(":")[1].strip())
-                    for line in lines[1:]:
-                        if line.strip():
-                            parts = line.split()
+                    lines = [line for line in f if line.strip()]
+                    # No '# progress:' line anymore, so all lines are box data
+                    for line in lines:
+                        parts = line.split()
+                        if len(parts) == 5:
                             boxes.append(BoxDTO(
                                 classId=int(parts[0]),
                                 xCenter=float(parts[1]),
@@ -101,14 +105,13 @@ async def get_dataset_images(dataset_name: str):
                             ))
             except Exception as e:
                 print(f"Error parsing annotation {label_path}: {e}")
-        
+
         images.append(AnnotatedImageDTO(
-            path=str( "/{0}/{1}".format(dataset_name, image_path)),
+            path=str(f"/{dataset_name}/{image_path}"),
             annotated=annotated,
             progress=progress,
             boxes=boxes
         ))
-    
     return images
 
 @app.post("/api/annotations", status_code=201)
