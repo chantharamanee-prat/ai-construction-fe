@@ -125,9 +125,23 @@ async def save_annotation(annotation: Annotation):
 
 @app.post("/api/predict")
 async def predict_image(file: UploadFile = File(...)):
-    """Run YOLO model prediction on an uploaded image."""
+    """Run YOLO model prediction on an uploaded image using both classification and detection models."""
     file_bytes = await file.read()
-    # Use the best trained model from the most recent training run
-    model_path = str(BASE_DIR.parent /"server" / "ml_scripts" / "classification" / "models" / "progress-classification.pt")
-    predictions = predict_image_yolo(model_path, file_bytes, Path(file.filename).suffix)
+    
+    # Define paths for both models
+    classification_model_path = str(BASE_DIR / "ml_scripts" / "classification" / "models" / "progress-classification.pt")
+    detection_model_path = str(BASE_DIR / "ml_scripts" / "detection" / "models" / "progress-detection.pt")
+    
+    # Check if models exist
+    if not Path(classification_model_path).exists():
+        raise HTTPException(status_code=500, detail="Classification model not found")
+    if not Path(detection_model_path).exists():
+        raise HTTPException(status_code=500, detail="Detection model not found")
+    
+    predictions = predict_image_yolo(
+        classification_model_path, 
+        detection_model_path, 
+        file_bytes, 
+        Path(file.filename).suffix
+    )
     return {"predictions": predictions}

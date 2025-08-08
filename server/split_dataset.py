@@ -120,6 +120,7 @@ def split_detection_dataset(config, images_root_dir, output_dir, train_ratio, va
                     group_images.append(img_path)
             if group_images:
                 progress_groups[progress_percent] = group_images
+                logging.info(f"Found {len(group_images)} images in progress group '{progress_percent}%'")
 
     if not progress_groups:
         logging.error(f"No images found in {images_root_dir} with progress subfolders")
@@ -147,22 +148,44 @@ def split_detection_dataset(config, images_root_dir, output_dir, train_ratio, va
         (output_dir / split / "images").mkdir(parents=True, exist_ok=True)
         (output_dir / split / "labels").mkdir(parents=True, exist_ok=True)
 
-    # Copy images and labels to respective directories
+
+    # Copy images and labels to respective directories, create empty label if missing
     for split, files in splits.items():
         for img_path, progress in files:
             dst_img_path = output_dir / split / "images" / img_path.name
             shutil.copy2(img_path, dst_img_path)
 
+            # Look for corresponding label file in the flat labels directory
             label_path = labels_dir / (img_path.stem + ".txt")
             dst_label_path = output_dir / split / "labels" / (img_path.stem + ".txt")
             if label_path.exists():
                 shutil.copy2(label_path, dst_label_path)
+                logging.debug(f"Copied label for {img_path.name}")
+            else:
+                # Create an empty label file if it does not exist
+                dst_label_path.touch(exist_ok=True)
+                logging.warning(f"No label found for {img_path.name}, created empty label file")
+
+    # Count successful label copies
+    total_images = sum(len(files) for files in splits.values())
+    labels_copied = 0
+    labels_missing = 0
+    
+    for split, files in splits.items():
+        for img_path, progress in files:
+            label_path = labels_dir / (img_path.stem + ".txt")
+            if label_path.exists():
+                labels_copied += 1
+            else:
+                labels_missing += 1
 
     logging.info(f"Detection dataset split completed:")
     logging.info(f"  Train: {len(splits['train'])} images")
     logging.info(f"  Val: {len(splits['val'])} images")
     if "test" in splits:
         logging.info(f"  Test: {len(splits['test'])} images")
+    logging.info(f"  Labels found: {labels_copied}/{total_images} ({labels_copied/total_images*100:.1f}%)")
+    logging.info(f"  Labels missing: {labels_missing}/{total_images} ({labels_missing/total_images*100:.1f}%)")
 
 if __name__ == "__main__":
     split_dataset("configs/dataset.yaml")

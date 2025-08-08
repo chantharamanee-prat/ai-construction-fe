@@ -1,0 +1,18 @@
+# YOLO Detection Dataset Configuration
+
+# Dataset paths (relative to this yaml file)
+path: /home/pratc/Workspace/awake/yolo-server/server/datasets/split_detection
+train: train/images
+val: val/images
+
+# Number of classes
+nc: 6
+
+# Class names (you should replace these with your actual class names)
+names:
+  0: foundation
+  1: column
+  2: beam
+  3: roof
+  4: wall
+  5: floor

@@ -1,5 +1,15 @@
 import React, { useState, useRef } from "react";
 import { predictImage } from "../api/predictionService";
+import type {
+  PredictionResult,
+  ClassificationPrediction,
+  DetectionPrediction,
+} from "../api/predictionService";
+import {
+  CLASS_NAMES,
+  CLASS_COLORS,
+  type ClassId,
+} from "./AnnotationTool/ClassSelector";
 
 interface Prediction {
   class: string;
@@ -9,10 +19,16 @@ interface Prediction {
 export default function MLPredictPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [predictionResult, setPredictionResult] =
+    useState<PredictionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageSize, setImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -25,7 +41,7 @@ export default function MLPredictPage() {
 
       setSelectedFile(file);
       setError(null);
-      setPredictions([]);
+      setPredictionResult(null);
 
       // Create preview URL
       const url = URL.createObjectURL(file);
@@ -48,7 +64,7 @@ export default function MLPredictPage() {
 
     try {
       const result = await predictImage(selectedFile);
-      setPredictions(result.predictions);
+      setPredictionResult(result.predictions);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Prediction failed");
     } finally {
@@ -59,11 +75,91 @@ export default function MLPredictPage() {
   const handleReset = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
-    setPredictions([]);
+    setPredictionResult(null);
     setError(null);
+    setImageSize(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleImageLoad = () => {
+    if (imageRef.current) {
+      setImageSize({
+        width: imageRef.current.naturalWidth,
+        height: imageRef.current.naturalHeight,
+      });
+    }
+  };
+
+  // Helper function to get class color based on class name
+  const getClassColor = (className: string): string => {
+    // Find the class ID based on class name
+    for (const [id, name] of Object.entries(CLASS_NAMES)) {
+      if (name === className) {
+        return CLASS_COLORS[parseInt(id) as ClassId];
+      }
+    }
+    // Fallback color if class not found
+    return "#ff4444";
+  };
+
+  // Helper function to render detection boxes
+  const renderDetectionBoxes = () => {
+    if (!predictionResult?.detection || !imageRef.current || !imageSize) {
+      return null;
+    }
+
+    const img = imageRef.current;
+    const displayWidth = img.offsetWidth;
+    const displayHeight = img.offsetHeight;
+
+    const scaleX = displayWidth / imageSize.width;
+    const scaleY = displayHeight / imageSize.height;
+
+    return predictionResult.detection.map((detection, index) => {
+      const { bbox } = detection;
+      const left = bbox.x1 * scaleX;
+      const top = bbox.y1 * scaleY;
+      const width = (bbox.x2 - bbox.x1) * scaleX;
+      const height = (bbox.y2 - bbox.y1) * scaleY;
+
+      // Get the appropriate color for this class
+      const classColor = getClassColor(detection.class);
+
+      return (
+        <div
+          key={index}
+          style={{
+            position: "absolute",
+            left: `${left}px`,
+            top: `${top}px`,
+            width: `${width}px`,
+            height: `${height}px`,
+            border: `2px solid ${classColor}`,
+            backgroundColor: `${classColor}20`, // 20 is hex for low opacity
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: "-25px",
+              left: "0",
+              backgroundColor: classColor,
+              color: "white",
+              padding: "2px 6px",
+              fontSize: "12px",
+              borderRadius: "3px",
+              whiteSpace: "nowrap",
+              textShadow: "1px 1px 1px rgba(0,0,0,0.5)",
+            }}
+          >
+            {detection.class} ({(detection.confidence * 100).toFixed(1)}%)
+          </div>
+        </div>
+      );
+    });
   };
 
   return (
@@ -166,16 +262,21 @@ export default function MLPredictPage() {
       {previewUrl && (
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
           <h3>Image Preview:</h3>
-          <img
-            src={previewUrl}
-            alt="Preview"
-            style={{
-              maxWidth: "100%",
-              maxHeight: "400px",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-            }}
-          />
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <img
+              ref={imageRef}
+              src={previewUrl}
+              alt="Preview"
+              onLoad={handleImageLoad}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "400px",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+              }}
+            />
+            {renderDetectionBoxes()}
+          </div>
         </div>
       )}
 
@@ -217,35 +318,63 @@ export default function MLPredictPage() {
       )}
 
       {/* Results Section */}
-      {predictions.length > 0 && (
+      {predictionResult && (
         <div style={{ marginTop: "30px" }}>
-          <h3>Prediction Results:</h3>
-          <div
-            style={{
-              // backgroundColor: "#d4edda",
-              border: "1px solid #c3e6cb",
-              borderRadius: "4px",
-              padding: "20px",
-            }}
-          >
-            {predictions.map((prediction, index) => (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "10px 0",
-                  borderBottom:
-                    index < predictions.length - 1
-                      ? "1px solid #c3e6cb"
-                      : "none",
-                }}
-              >
-                <span style={{ fontWeight: "bold" }}>{prediction.class}</span>
-                <span>{(prediction.confidence * 100).toFixed(2)}%</span>
+          {/* Classification Results */}
+          {predictionResult.classification &&
+            predictionResult.classification.length > 0 && (
+              <div style={{ marginBottom: "30px" }}>
+                <h3>Classification Results:</h3>
+                <div
+                  style={{
+                    border: "1px solid #c3e6cb",
+                    borderRadius: "4px",
+                    padding: "20px",
+                  }}
+                >
+                  {predictionResult.classification.map((prediction, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "10px 0",
+                        borderBottom:
+                          index < predictionResult.classification.length - 1
+                            ? "1px solid #c3e6cb"
+                            : "none",
+                      }}
+                    >
+                      <span style={{ fontWeight: "bold" }}>
+                        {prediction.class}
+                      </span>
+                      <span>{(prediction.confidence * 100).toFixed(2)}%</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+
+          {/* No Results Message */}
+          {(!predictionResult.classification ||
+            predictionResult.classification.length === 0) &&
+            (!predictionResult.detection ||
+              predictionResult.detection.length === 0) && (
+              <div style={{ marginTop: "30px" }}>
+                <h3>No Results Found</h3>
+                <div
+                  style={{
+                    backgroundColor: "#f8d7da",
+                    border: "1px solid #f5c6cb",
+                    borderRadius: "4px",
+                    padding: "20px",
+                    color: "#721c24",
+                  }}
+                >
+                  No objects or classifications were detected in this image.
+                </div>
+              </div>
+            )}
         </div>
       )}
     </div>

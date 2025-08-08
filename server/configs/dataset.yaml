@@ -2,7 +2,7 @@
 ## classification or detection
 dataset_type: "detection"
 images_dir: "datasets/raw_images"
-labels_dir: "datsets/labels"
+labels_dir: "datasets/labels"
 output_dir: "datasets/split"
 
 # Split ratios (must sum to 1.0)
