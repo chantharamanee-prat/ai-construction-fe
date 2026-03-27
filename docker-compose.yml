@@ -1,14 +1,14 @@
 version: "3.8"
 services:
   yolo-server:
-    image: yolo-server-api
+    build: .
     container_name: yolo-server
     ports:
       - "9500:8000"
     networks:
       - yolo-network
   web:
-    image: yolo-server-web
+    build: .
     container_name: yolo-web
     ports:
       - "9501:80"
