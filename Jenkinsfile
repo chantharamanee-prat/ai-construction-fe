@@ -1,11 +1,12 @@
-def DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1384405075451187210/PNnpJr4Aw8VLW8H0IXpgQd9QZiY5ePJcJM0c2KTe-cW4grRSJREqW0_ZSjdqBll7LRb6'
+// 1. เปลี่ยนจากการใช้ def เป็น env.DISCORD_WEBHOOK
+env.DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1384405075451187210/PNnpJr4Aw8VLW8H0IXpgQd9QZiY5ePJcJM0c2KTe-cW4grRSJREqW0_ZSjdqBll7LRb6'
 
-// ฟังก์ชันสำหรับส่งข้อความไปยัง Discord
 def sendDiscordNoti(String message) {
+    // 2. เรียกใช้ตัวแปรผ่าน env.DISCORD_WEBHOOK
     sh """
     curl -H "Content-Type: application/json" \\
          -d '{"content": "${message}"}' \\
-         ${DISCORD_WEBHOOK}
+         ${env.DISCORD_WEBHOOK}
     """
 }
 
@@ -17,7 +18,6 @@ node {
             scmVars = checkout scm
             echo "Current branch: ${scmVars.GIT_BRANCH}"
             
-            // ส่ง Noti แจ้งว่าเริ่มทำงาน
             sendDiscordNoti("🚀 **[Jenkins]** Started pipeline for branch: `${scmVars.GIT_BRANCH}`")
         }
         
@@ -35,21 +35,17 @@ node {
                 sh 'docker compose down'
                 sh 'docker compose up -d'
                 
-                // ส่ง Noti แจ้งว่า Deploy สำเร็จ (เฉพาะ branch master)
                 sendDiscordNoti("✅ **[Jenkins]** Build & Deploy completed successfully for branch: `${scmVars.GIT_BRANCH}`!")
             } else {
                 echo "Skipped."
-                // ส่ง Noti แจ้งว่าทำงานเสร็จแต่ไม่ได้ Deploy
                 sendDiscordNoti("ℹ️ **[Jenkins]** Pipeline finished for branch: `${scmVars.GIT_BRANCH}` (Skipped Build & Deploy)")
             }
         }
         
     } catch (Exception e) {
-        // ส่ง Noti หากเกิดข้อผิดพลาด (Pipeline พัง)
         def branchName = scmVars?.GIT_BRANCH ?: 'unknown branch'
         sendDiscordNoti("❌ **[Jenkins]** Pipeline **FAILED** for branch: `${branchName}`\\n**Error:** ${e.getMessage()}")
         
-        // Throw error กลับออกไปเพื่อให้ Jenkins ขึ้นสถานะ Failed
         throw e
     }
 }
