@@ -18,7 +18,7 @@ node {
             scmVars = checkout scm
             echo "Current branch: ${scmVars.GIT_BRANCH}"
             
-            sendDiscordNoti("🚀 **[Jenkins]** Started pipeline for branch: `${scmVars.GIT_BRANCH}`")
+            sendDiscordNoti("🚀 **[Jenkins]** Started pipeline for AI construction")
         }
         
         stage('Build') {
@@ -35,16 +35,16 @@ node {
                 sh 'docker compose down'
                 sh 'docker compose up -d'
                 
-                sendDiscordNoti("✅ **[Jenkins]** Build & Deploy completed successfully for branch: `${scmVars.GIT_BRANCH}`!")
+                sendDiscordNoti("✅ **[Jenkins]** Build & Deploy completed successfully for AI construction!")
             } else {
                 echo "Skipped."
-                sendDiscordNoti("ℹ️ **[Jenkins]** Pipeline finished for branch: `${scmVars.GIT_BRANCH}` (Skipped Build & Deploy)")
+                sendDiscordNoti("ℹ️ **[Jenkins]** Pipeline finished for AI construction (Skipped Build & Deploy)")
             }
         }
         
     } catch (Exception e) {
         def branchName = scmVars?.GIT_BRANCH ?: 'unknown branch'
-        sendDiscordNoti("❌ **[Jenkins]** Pipeline **FAILED** for branch: `${branchName}`\\n**Error:** ${e.getMessage()}")
+        sendDiscordNoti("❌ **[Jenkins]** Pipeline **FAILED** for AI construction \\n**Error:** ${e.getMessage()}")
         
         throw e
     }
