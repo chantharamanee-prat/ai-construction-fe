@@ -16,7 +16,7 @@ RUN apt-get update && \
         libice6 \
         libxi6 \
         libxrandr2 \
-        libgl1-mesa-glx \
+        libgl1 \
         git \
         curl \
     && rm -rf /var/lib/apt/lists/*
