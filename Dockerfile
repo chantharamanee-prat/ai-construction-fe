@@ -27,8 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy server code and scripts
 COPY server/ ./server/
-COPY start-server.sh ./
-RUN chmod +x start-server.sh
+COPY start-production.sh ./
+RUN chmod +x start-production.sh
 
 # Create necessary directories
 RUN mkdir -p runs models datasets
@@ -44,5 +44,5 @@ ENV PYTHONPATH=/app
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Start the server using the start script
-CMD ["./start-server.sh"]
+# Start the server using the production script
+CMD ["./start-production.sh"]
