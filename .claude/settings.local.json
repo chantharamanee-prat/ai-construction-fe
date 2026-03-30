@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x:*)",
+      "Bash(podman:*)",
+      "Bash(python:*)",
+      "Bash(source:*)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(./venv/Scripts/pip install:*)",
+      "Bash(./venv/Scripts/pip list:*)",
+      "Bash(npm install:*)",
+      "Bash(./venv/Scripts/python:*)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)"
+    ]
+  }
+}
